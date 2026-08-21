@@ -122,9 +122,12 @@ yt-mpeg-gui/
 
 ## 📄 License & Legal Notice
 
-This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**. See the [LICENSE](LICENSE) file for complete details.
+This project is open-source software licensed under the **GNU General Public License v3.0 (GPL-3.0)**. See the [LICENSE](LICENSE) file for complete terms and conditions.
 
 ### Third-Party Software & Attributions
-- **FFmpeg**: Licensed under the GNU General Public License (GPL) v2+/v3+. FFmpeg is a trademark of Fabrice Bellard, originator of the FFmpeg project. ([ffmpeg.org](https://ffmpeg.org))
-- **yt-dlp**: Licensed under The Unlicense (Public Domain). ([github.com/yt-dlp/yt-dlp](https://github.com/yt-dlp/yt-dlp))
-- **PySide6 / Qt6**: Licensed under LGPLv3. ([qt.io](https://www.qt.io))
+- **FFmpeg**: The core FFmpeg codebase is licensed under LGPL v2.1+. However, the binary distributed and bundled with this application is built with `--enable-gpl` and `--enable-version3` (including high-efficiency encoders like `x264` and `x265`), making the distributed executable subject to the **GNU GPL v3.0**. FFmpeg is a trademark of Fabrice Bellard. ([ffmpeg.org](https://ffmpeg.org))
+- **yt-dlp**: Dedicated to the public domain under **The Unlicense**. ([github.com/yt-dlp/yt-dlp](https://github.com/yt-dlp/yt-dlp))
+- **PySide6 / Qt6**: The official Python Qt bindings, licensed under the **GNU LGPL v3.0**. ([qt.io](https://www.qt.io))
+- **Pillow**: Python Imaging Library, licensed under the **HPND License**. ([python-pillow.org](https://python-pillow.org))
+- **Requests & Urllib3**: HTTP libraries, licensed under the **Apache License 2.0**.
+

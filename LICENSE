@@ -580,16 +580,27 @@ copy of the Program in return for a fee.
                       THIRD-PARTY NOTICES & LICENSES
 ==============================================================================
 
-1. FFmpeg
-   - FFmpeg is licensed under the GNU General Public License (GPL) version 2+ / 3+.
+This software incorporates and interacts with the following open-source projects:
+
+1. FFmpeg (https://ffmpeg.org)
+   - The core FFmpeg codebase is licensed under the GNU Lesser General Public License (LGPL) version 2.1 or later.
+   - The binary bundled and distributed with this project (built via yt-dlp/FFmpeg-Builds) is explicitly compiled with '--enable-gpl' and '--enable-version3' (including libx264, libx265, and other GPL-licensed encoders/filters). Consequently, pursuant to FFmpeg licensing terms, the compiled FFmpeg binary as distributed is licensed under the GNU General Public License (GPL) version 3.0.
+   - Source code and build recipes: https://github.com/yt-dlp/FFmpeg-Builds
    - FFmpeg is a trademark of Fabrice Bellard, originator of the FFmpeg project.
-   - Website: https://ffmpeg.org
-   - Source code and build scripts: https://github.com/yt-dlp/FFmpeg-Builds
 
-2. yt-dlp
-   - yt-dlp is licensed under The Unlicense (Public Domain dedication).
-   - Website: https://github.com/yt-dlp/yt-dlp
+2. yt-dlp (https://github.com/yt-dlp/yt-dlp)
+   - yt-dlp is dedicated to the public domain under The Unlicense.
+   - You can copy, modify, publish, use, compile, sell, or distribute the software freely.
 
-3. PySide6 / Qt6
-   - PySide6 is licensed under the GNU Lesser General Public License (LGPL) v3.
-   - Website: https://www.qt.io
+3. PySide6 / Qt6 (https://wiki.qt.io/Qt_for_Python)
+   - PySide6 is the official Python module from the Qt Project providing Python bindings to Qt6.
+   - Licensed under the GNU Lesser General Public License (LGPL) version 3.0.
+
+4. Pillow (https://python-pillow.org)
+   - The Friendly Python Imaging Library Fork.
+   - Licensed under the HPND (Historical Permission Notice and Disclaimer) License.
+
+5. Requests (https://requests.readthedocs.io) & Urllib3 (https://urllib3.readthedocs.io)
+   - HTTP libraries for Python.
+   - Licensed under the Apache License, Version 2.0.
+
