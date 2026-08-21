@@ -1,31 +1,57 @@
-# ⚡ yt-dlp & FFmpeg GUI Studio (`yt-mpeg-gui`)
+<p align="center">
+  <img src="gui_app/assets/banner.png" alt="YT-DLP & FFmpeg GUI Studio Banner" width="100%">
+</p>
 
-A modern, high-performance, dark-themed Desktop GUI for Windows combining the power of **yt-dlp** and **FFmpeg** into a unified, standalone application.
+<p align="center">
+  <img src="https://img.shields.io/badge/License-GPL%203.0-blue.svg" alt="License: GPL 3.0">
+  <img src="https://img.shields.io/badge/Python-3.10%2B-blue?logo=python" alt="Python 3.10+">
+  <img src="https://img.shields.io/badge/Qt-PySide6-41CD52?logo=qt" alt="PySide6">
+  <img src="https://img.shields.io/badge/yt--dlp-2026.08.19-red?logo=youtube" alt="yt-dlp">
+  <img src="https://img.shields.io/badge/FFmpeg-Integrated-green?logo=ffmpeg" alt="FFmpeg">
+  <img src="https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6?logo=windows" alt="Platform">
+</p>
+
+<h1 align="center">⚡ YT-DLP & FFmpeg GUI Studio (<code>yt-mpeg-gui</code>)</h1>
+
+<p align="center">
+  <b>The Ultimate Standalone Desktop Media Downloader and Transcoder for Windows.</b><br>
+  DOWNLOAD. EXTRACT. CONVERT. ENJOY.
+</p>
 
 ---
 
 ## 🌟 Key Features
 
-- 🎥 **Universal Media Downloader**: Supports YouTube, TikTok, Instagram, Twitter/X, Reddit, Twitch, Vimeo, and 1000+ websites.
-- ⚡ **Embedded FFmpeg Engine**: Bundles full `ffmpeg.exe` for high-speed audio-video merging, stream remuxing, subtitle embedding, and metadata processing.
-- 🔍 **Instant Media Inspection**: Live thumbnail preview, channel details, duration, view count, and available resolution options before downloading.
-- ⏸️ **Live Pause & Resume**: Pause and resume downloads on the fly without socket timeouts or losing downloaded bytes.
-- 🔄 **1-Click Engine Updater**: In-app automated backend updater that fetches and integrates latest releases of yt-dlp and FFmpeg directly from GitHub.
+- 🎥 **Universal Media Downloader**: Supports YouTube, TikTok, Instagram, Twitter/X, Reddit, Twitch, Vimeo, Facebook, and 1000+ websites.
+- ⚡ **Integrated High-Speed FFmpeg**: Bundles full codec-packed `ffmpeg.exe` for stream demuxing, audio-video merging, thumbnail embedding, and fast format conversion.
+- ⏸️ **Live Pause & Resume**: Pause and unpause active downloads on the fly without network timeouts or losing downloaded chunks.
+- 🔄 **1-Click Engine Auto-Updater**: In-app background update engine that queries official GitHub releases for both **yt-dlp** and **FFmpeg**.
+- 🔍 **Instant Media Inspection**: Live thumbnail preview, channel details, duration, view count, and available stream resolutions before downloading.
 - 📦 **Rich Format & Quality Controls**:
-  - **Video + Audio**: Best Quality (auto-merged), 4K Ultra HD (2160p), 2K Quad HD (1440p), 1080p FHD, 720p HD, 480p, 360p.
-  - **Containers**: MP4, MKV, WEBM, AVI, MOV.
+  - **Video + Audio**: Best Quality (auto-merged), 4K Ultra HD (2160p), 2K Quad HD (1440p), 1080p FHD, 720p HD, 480p SD, 360p.
+  - **Containers**: MP4 (Universal), MKV (Matroska), WEBM, AVI, MOV.
   - **Audio Extraction**: Lossless FLAC, WAV, MP3 (320kbps / 256kbps / 192kbps / 128kbps), M4A (AAC), OPUS.
-- 📋 **Batch Queue Manager**: Import multiple URLs simultaneously with individual progress tracking, pause, resume, and bulk actions.
-- 💬 **Subtitles & Metadata**: Embed subtitles or export `.srt`/`.vtt` files, embed video thumbnails into audio/video tags, and embed chapter markers.
+- 📋 **Batch Queue Manager**: Bulk URL importer supporting multi-line paste with individual progress tracking, pause, resume, and bulk management.
+- 💬 **Subtitles & Metadata**: Embed subtitles or export standalone `.srt`/`.vtt` files, embed video thumbnails into media files, and embed chapter markers.
 - 🛡️ **SponsorBlock Integration**: Automatically remove sponsor segments, intros, outros, and self-promos.
-- 🍪 **Cookie & Authentication**: Extract cookies directly from installed browsers (Chrome, Edge, Firefox, Brave, Opera, Vivaldi) or custom `cookies.txt` files for private / member-only / age-restricted content.
-- 🌐 **Network & Speed**: Download rate limiting, concurrent fragment multi-threading, and custom proxy support (HTTP/HTTPS/SOCKS5).
+- 🍪 **Cookie & Authentication Support**: Extract cookies directly from installed browsers (Chrome, Edge, Firefox, Brave, Opera, Vivaldi) or custom `cookies.txt` files for private / member-only / age-restricted content.
+- 🌐 **Network & Performance**: Download rate limiting, concurrent fragment multi-threading, and custom proxy support (HTTP/HTTPS/SOCKS5).
 - 📁 **Download History**: Integrated history browser with quick "Play File" and "Show in Folder" shortcuts.
 - 📜 **Live Diagnostics Console**: Real-time colored yt-dlp & FFmpeg log viewer.
 
 ---
 
-## 🚀 Quick Start (Running from Source)
+## 📦 Download Standalone Executable (.exe)
+
+Pre-built portable packages are available under [GitHub Releases](https://github.com/hazynyx/yt-mpeg-gui/releases):
+
+1. Download **`yt-dlp-gui-windows-x64.zip`** from the latest release.
+2. Extract the ZIP to any folder.
+3. Launch **`yt-dlp-gui.exe`** — no Python or FFmpeg installation required!
+
+---
+
+## 🚀 Running from Source
 
 ### Requirements
 - Python 3.10+
@@ -70,7 +96,7 @@ yt-mpeg-gui/
 ├── gui_app/
 │   ├── __init__.py
 │   ├── app.py                # Main window & application lifecycle
-│   ├── assets/               # High-res logos & icons (.png, .ico)
+│   ├── assets/               # High-res logos, banner & icons (.png, .ico)
 │   ├── assets_manager.py     # Vector icon & UI asset provider
 │   ├── engine.py             # Asynchronous yt-dlp & FFmpeg download worker
 │   ├── ffmpeg_finder.py      # Binary locator for bundled & user FFmpeg
