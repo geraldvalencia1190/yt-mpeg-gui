@@ -286,7 +286,7 @@ class DownloaderTab(QWidget):
         actions_layout.addWidget(self.btn_download, 2)
         actions_layout.addWidget(self.btn_add_queue, 1)
         actions_layout.addWidget(self.btn_cancel, 1)
-        layout.addWidget(actions_layout)
+        layout.addLayout(actions_layout)
 
         # 5. Live Progress Card
         self.progress_frame = QFrame()
