@@ -1,0 +1,27 @@
+# Binaries (GitHub 100MB file limit)
+*.exe
+*.dll
+*.so
+*.dylib
+
+# External large source folders
+FFmpeg-master/
+yt-dlp-2026.08.19/
+
+# Python & PyInstaller
+__pycache__/
+*.py[cod]
+*$py.class
+*.spec
+build/
+dist/
+.env
+.venv/
+env/
+venv/
+*.egg-info/
+
+# App temporary/history data
+*.log
+gui_app/history.json
+gui_app/config.json
