@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, Signal, QThread
 from gui_app.ffmpeg_finder import find_ffmpeg_binary, get_ffmpeg_version, get_user_bin_dir
 from gui_app.settings_manager import SettingsManager
+from gui_app.assets_manager import get_app_icon, get_icon, get_logo_pixmap
 
 YTDLP_REPO = "https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest"
 FFMPEG_REPO = "https://api.github.com/repos/yt-dlp/FFmpeg-Builds/releases/latest"
@@ -204,7 +205,8 @@ class UpdateDialog(QDialog):
     def __init__(self, settings_mgr: SettingsManager, parent=None):
         super().__init__(parent)
         self.settings_mgr = settings_mgr
-        self.setWindowTitle("🔄 Engine & Backend Updater")
+        self.setWindowTitle("Engine & Backend Updater")
+        self.setWindowIcon(get_app_icon())
         self.setFixedSize(540, 420)
         self.setModal(True)
 
@@ -220,10 +222,10 @@ class UpdateDialog(QDialog):
         layout.setContentsMargins(18, 18, 18, 18)
         layout.setSpacing(12)
 
-        # Header Title
+        # Header Title with Logo
         title_box = QHBoxLayout()
-        icon_lbl = QLabel("⚡")
-        icon_lbl.setStyleSheet("font-size: 22px;")
+        icon_lbl = QLabel()
+        icon_lbl.setPixmap(get_logo_pixmap(28, 28))
         
         lbl_h = QLabel("Automated Engine Updater")
         lbl_h.setStyleSheet("font-size: 16px; font-weight: 700; color: #ffffff;")
@@ -301,7 +303,8 @@ class UpdateDialog(QDialog):
         self.chk_auto.setChecked(self.settings_mgr.get("check_updates_startup", True))
         self.chk_auto.toggled.connect(lambda v: self.settings_mgr.set("check_updates_startup", v))
 
-        self.btn_update_now = QPushButton("⚡ Update All Engines Now")
+        self.btn_update_now = QPushButton("Update All Engines Now")
+        self.btn_update_now.setIcon(get_icon("refresh", "#ffffff"))
         self.btn_update_now.setObjectName("btnStartDownload")
         self.btn_update_now.setFixedHeight(34)
         self.btn_update_now.setEnabled(False)
@@ -335,7 +338,7 @@ class UpdateDialog(QDialog):
             self.badge_yt_status.setText(f"Update Available (v{lat_yt})")
             self.badge_yt_status.setStyleSheet("color: #38bdf8; font-weight: 700;")
         else:
-            self.badge_yt_status.setText("✔ Up to Date")
+            self.badge_yt_status.setText("Up to Date")
             self.badge_yt_status.setStyleSheet("color: #22c55e; font-weight: 700;")
 
         # Display FFmpeg status
@@ -346,7 +349,7 @@ class UpdateDialog(QDialog):
             self.badge_ff_status.setText("Missing (Download available)")
             self.badge_ff_status.setStyleSheet("color: #ef4444; font-weight: 700;")
         else:
-            self.badge_ff_status.setText("✔ Ready (GitHub latest)")
+            self.badge_ff_status.setText("Ready (GitHub latest)")
             self.badge_ff_status.setStyleSheet("color: #22c55e; font-weight: 700;")
 
         self.btn_update_now.setEnabled(True)
@@ -373,16 +376,16 @@ class UpdateDialog(QDialog):
         self.lbl_speed_info.setText("")
         
         if success:
-            self.lbl_status_step.setText("🎉 " + msg)
+            self.lbl_status_step.setText(msg)
             self.prog_bar.setValue(100)
-            self.badge_yt_status.setText("✔ Up to Date")
+            self.badge_yt_status.setText("Up to Date")
             self.badge_yt_status.setStyleSheet("color: #22c55e; font-weight: 700;")
-            self.badge_ff_status.setText("✔ Ready (Latest)")
+            self.badge_ff_status.setText("Ready (Latest)")
             self.badge_ff_status.setStyleSheet("color: #22c55e; font-weight: 700;")
             self.engines_updated.emit()
             QMessageBox.information(self, "Update Successful", "Backends (yt-dlp & FFmpeg) have been updated successfully!")
         else:
-            self.lbl_status_step.setText("❌ " + msg)
+            self.lbl_status_step.setText(msg)
             QMessageBox.warning(self, "Update Notification", f"Update process result:\n{msg}")
 
     def closeEvent(self, event):

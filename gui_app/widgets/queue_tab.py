@@ -5,11 +5,12 @@ from PySide6.QtWidgets import (
     QTableWidget, QTableWidgetItem, QHeaderView, QFrame, QMessageBox,
     QProgressBar, QComboBox, QCheckBox
 )
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QColor
+from PySide6.QtCore import Qt, Signal, QSize
+from PySide6.QtGui import QColor, QIcon
 
 from gui_app.engine import DownloadWorker
 from gui_app.settings_manager import SettingsManager
+from gui_app.assets_manager import get_icon
 
 class QueueTab(QWidget):
     log_signal = Signal(str, str)
@@ -37,7 +38,7 @@ class QueueTab(QWidget):
         add_layout.setSpacing(8)
 
         add_header_row = QHBoxLayout()
-        lbl_batch = QLabel("📋 Bulk URL Importer (one URL per line):")
+        lbl_batch = QLabel("Bulk URL Importer (one URL per line):")
         lbl_batch.setObjectName("sectionHeader")
         add_header_row.addWidget(lbl_batch)
         add_header_row.addStretch()
@@ -50,7 +51,8 @@ class QueueTab(QWidget):
         self.combo_batch_mode = QComboBox()
         self.combo_batch_mode.addItems(["Video: Best Quality (MP4)", "Video: 1080p FHD (MP4)", "Video: 720p HD (MP4)", "Audio: MP3 (320 kbps)", "Audio: M4A", "Audio: FLAC Lossless"])
         
-        self.btn_add_bulk = QPushButton("➕ Add URLs to Queue")
+        self.btn_add_bulk = QPushButton("Add URLs to Queue")
+        self.btn_add_bulk.setIcon(get_icon("plus", "#ffffff"))
         self.btn_add_bulk.setObjectName("btnPrimary")
         self.btn_add_bulk.clicked.connect(self.add_bulk_urls)
 
@@ -80,28 +82,33 @@ class QueueTab(QWidget):
         self.queue_count_label = QLabel("Batch Queue (0 items)")
         self.queue_count_label.setObjectName("sectionHeader")
 
-        self.btn_start_queue = QPushButton("⚡ Start Batch Download")
+        self.btn_start_queue = QPushButton("Start Batch Download")
+        self.btn_start_queue.setIcon(get_icon("download", "#ffffff"))
         self.btn_start_queue.setObjectName("btnStartDownload")
         self.btn_start_queue.setFixedHeight(34)
         self.btn_start_queue.clicked.connect(self.start_queue_download)
 
-        self.btn_pause_queue = QPushButton("⏸  Pause Queue")
+        self.btn_pause_queue = QPushButton("Pause Queue")
+        self.btn_pause_queue.setIcon(get_icon("pause", "#ffffff"))
         self.btn_pause_queue.setObjectName("btnPauseAction")
         self.btn_pause_queue.setFixedHeight(34)
         self.btn_pause_queue.setEnabled(False)
         self.btn_pause_queue.clicked.connect(self.toggle_queue_pause)
 
-        self.btn_stop_queue = QPushButton("✕ Stop / Cancel")
+        self.btn_stop_queue = QPushButton("Stop / Cancel")
+        self.btn_stop_queue.setIcon(get_icon("cancel", "#ffffff"))
         self.btn_stop_queue.setObjectName("btnCancelAction")
         self.btn_stop_queue.setFixedHeight(34)
         self.btn_stop_queue.setEnabled(False)
         self.btn_stop_queue.clicked.connect(self.stop_queue_download)
 
-        self.btn_clear_completed = QPushButton("🧹 Clear Done")
+        self.btn_clear_completed = QPushButton("Clear Done")
+        self.btn_clear_completed.setIcon(get_icon("check", "#cbd5e1"))
         self.btn_clear_completed.setFixedHeight(34)
         self.btn_clear_completed.clicked.connect(self.clear_completed)
 
-        self.btn_clear_all = QPushButton("🗑️ Clear All")
+        self.btn_clear_all = QPushButton("Clear All")
+        self.btn_clear_all.setIcon(get_icon("trash", "#cbd5e1"))
         self.btn_clear_all.setFixedHeight(34)
         self.btn_clear_all.clicked.connect(self.clear_all)
 
@@ -238,7 +245,8 @@ class QueueTab(QWidget):
 
         self.btn_start_queue.setEnabled(False)
         self.btn_pause_queue.setEnabled(True)
-        self.btn_pause_queue.setText("⏸  Pause Queue")
+        self.btn_pause_queue.setText("Pause Queue")
+        self.btn_pause_queue.setIcon(get_icon("pause", "#ffffff"))
         self.btn_pause_queue.setObjectName("btnPauseAction")
         self.btn_pause_queue.style().unpolish(self.btn_pause_queue)
         self.btn_pause_queue.style().polish(self.btn_pause_queue)
@@ -263,14 +271,16 @@ class QueueTab(QWidget):
         if self.download_worker:
             is_paused = self.download_worker.toggle_pause()
             if is_paused:
-                self.btn_pause_queue.setText("▶  Resume Queue")
+                self.btn_pause_queue.setText("Resume Queue")
+                self.btn_pause_queue.setIcon(get_icon("play", "#ffffff"))
                 self.btn_pause_queue.setObjectName("btnResumeAction")
                 for task in self.queue_items:
                     if task.get("status") == "Downloading":
                         task["status"] = "Paused"
                         break
             else:
-                self.btn_pause_queue.setText("⏸  Pause Queue")
+                self.btn_pause_queue.setText("Pause Queue")
+                self.btn_pause_queue.setIcon(get_icon("pause", "#ffffff"))
                 self.btn_pause_queue.setObjectName("btnPauseAction")
                 for task in self.queue_items:
                     if task.get("status") == "Paused":
@@ -334,7 +344,8 @@ class QueueTab(QWidget):
     def on_queue_all_finished(self):
         self.btn_start_queue.setEnabled(True)
         self.btn_pause_queue.setEnabled(False)
-        self.btn_pause_queue.setText("⏸  Pause Queue")
+        self.btn_pause_queue.setText("Pause Queue")
+        self.btn_pause_queue.setIcon(get_icon("pause", "#ffffff"))
         self.btn_pause_queue.setObjectName("btnPauseAction")
         self.btn_pause_queue.style().unpolish(self.btn_pause_queue)
         self.btn_pause_queue.style().polish(self.btn_pause_queue)

@@ -13,6 +13,8 @@ def build():
 
     root_dir = os.path.dirname(os.path.abspath(__file__))
     ffmpeg_exe = os.path.join(root_dir, "ffmpeg.exe")
+    app_ico = os.path.join(root_dir, "app.ico")
+    assets_dir = os.path.join(root_dir, "gui_app", "assets")
 
     if not os.path.isfile(ffmpeg_exe):
         print(f"WARNING: ffmpeg.exe not found at {ffmpeg_exe}")
@@ -23,6 +25,17 @@ def build():
         "--windowed",
         "--noconfirm",
         "--clean",
+    ]
+
+    # Application Icon
+    if os.path.isfile(app_ico):
+        cmd.append(f"--icon={app_ico}")
+
+    # Add assets
+    if os.path.isdir(assets_dir):
+        cmd.extend(["--add-data", f"{assets_dir};gui_app/assets"])
+
+    cmd.extend([
         # Collect only essential yt_dlp and PIL components
         "--collect-all=yt_dlp",
         "--collect-submodules=PIL",
@@ -51,7 +64,7 @@ def build():
         "--exclude-module=torch",
         "--exclude-module=pygame",
         "--exclude-module=unittest",
-    ]
+    ])
 
     # Include ffmpeg binary (yt-dlp performs all media conversion, extraction and merging via ffmpeg)
     if os.path.isfile(ffmpeg_exe):
@@ -65,6 +78,12 @@ def build():
 
     if result.returncode == 0:
         dist_folder = os.path.join(root_dir, 'dist', 'yt-dlp-gui')
+        # Copy assets folder directly as well to ensure runtime availability
+        dst_assets = os.path.join(dist_folder, "gui_app", "assets")
+        if os.path.isdir(assets_dir):
+            os.makedirs(os.path.dirname(dst_assets), exist_ok=True)
+            shutil.copytree(assets_dir, dst_assets, dirs_exist_ok=True)
+
         total_size = sum(os.path.getsize(os.path.join(dirpath, filename)) for dirpath, _, filenames in os.walk(dist_folder) for filename in filenames)
         print("\n==================================================")
         print("BUILD SUCCESSFUL & OPTIMIZED!")

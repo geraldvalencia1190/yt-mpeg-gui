@@ -12,6 +12,7 @@ import yt_dlp
 from gui_app.settings_manager import SettingsManager
 from gui_app.ffmpeg_finder import find_ffmpeg_binary, find_ffprobe_binary, get_ffmpeg_version
 from gui_app.updater import UpdateDialog
+from gui_app.assets_manager import get_icon
 
 class SettingsTab(QWidget):
     settings_saved_signal = Signal()
@@ -37,18 +38,19 @@ class SettingsTab(QWidget):
         layout.setSpacing(14)
 
         # 0. Engine & Backend Updater Card
-        grp_updates = QGroupBox("⚡ Engine & Backend Updater (yt-dlp & FFmpeg)")
+        grp_updates = QGroupBox("Engine & Backend Updater (yt-dlp & FFmpeg)")
         grid_up = QGridLayout(grp_updates)
         grid_up.setSpacing(10)
 
-        ytdlp_ver = getattr(yt_dlp, "__version__", "unknown")
+        ytdlp_ver = getattr(yt_dlp, "__version__", None) or getattr(getattr(yt_dlp, "version", None), "__version__", "2026.08.19")
         lbl_yt = QLabel(f"Core yt-dlp Engine:  <b>v{ytdlp_ver}</b>")
         lbl_yt.setStyleSheet("color: #38bdf8;")
 
         self.lbl_ff_info = QLabel("FFmpeg Processor: Checking...")
         self.lbl_ff_info.setStyleSheet("color: #22c55e;")
 
-        self.btn_open_updater = QPushButton("🔄 Check & Update Engines from GitHub...")
+        self.btn_open_updater = QPushButton("Check & Update Engines from GitHub...")
+        self.btn_open_updater.setIcon(get_icon("refresh", "#ffffff"))
         self.btn_open_updater.setObjectName("btnStartDownload")
         self.btn_open_updater.setFixedHeight(34)
         self.btn_open_updater.clicked.connect(self.open_update_dialog)
@@ -64,13 +66,14 @@ class SettingsTab(QWidget):
         layout.addWidget(grp_updates)
 
         # 1. Output & File Naming
-        grp_output = QGroupBox("📁 Download & File Naming Settings")
+        grp_output = QGroupBox("Download & File Naming Settings")
         grid_out = QGridLayout(grp_output)
         grid_out.setSpacing(10)
 
         grid_out.addWidget(QLabel("Default Download Directory:"), 0, 0)
         self.edit_dir = QLineEdit(self.settings_mgr.get("download_dir"))
         btn_dir = QPushButton("Browse...")
+        btn_dir.setIcon(get_icon("folder", "#cbd5e1"))
         btn_dir.setObjectName("btnSecondary")
         btn_dir.clicked.connect(self.browse_download_dir)
         dir_box = QHBoxLayout()
@@ -89,7 +92,7 @@ class SettingsTab(QWidget):
         layout.addWidget(grp_output)
 
         # 2. FFmpeg & Media Processing
-        grp_ffmpeg = QGroupBox("🎬 FFmpeg & Post-Processing Settings")
+        grp_ffmpeg = QGroupBox("FFmpeg & Post-Processing Settings")
         grid_ff = QGridLayout(grp_ffmpeg)
         grid_ff.setSpacing(10)
 
@@ -103,6 +106,7 @@ class SettingsTab(QWidget):
         self.edit_ffmpeg_path = QLineEdit(self.settings_mgr.get("custom_ffmpeg_path"))
         self.edit_ffmpeg_path.setPlaceholderText("Leave blank to use integrated ffmpeg.exe")
         btn_ff_browse = QPushButton("Browse...")
+        btn_ff_browse.setIcon(get_icon("folder", "#cbd5e1"))
         btn_ff_browse.setObjectName("btnSecondary")
         btn_ff_browse.clicked.connect(self.browse_ffmpeg_binary)
         ff_box = QHBoxLayout()
@@ -126,7 +130,7 @@ class SettingsTab(QWidget):
         layout.addWidget(grp_ffmpeg)
 
         # 3. Subtitles & SponsorBlock
-        grp_subs = QGroupBox("💬 Subtitles & SponsorBlock")
+        grp_subs = QGroupBox("Subtitles & SponsorBlock")
         grid_sub = QGridLayout(grp_subs)
         grid_sub.setSpacing(10)
 
@@ -154,7 +158,7 @@ class SettingsTab(QWidget):
         layout.addWidget(grp_subs)
 
         # 4. Network, Cookies & Performance
-        grp_net = QGroupBox("🌐 Network, Authentication & Performance")
+        grp_net = QGroupBox("Network, Authentication & Performance")
         grid_net = QGridLayout(grp_net)
         grid_net.setSpacing(10)
 
@@ -171,6 +175,7 @@ class SettingsTab(QWidget):
         self.edit_cookie_file = QLineEdit(self.settings_mgr.get("custom_cookies_file", ""))
         self.edit_cookie_file.setPlaceholderText("Path to cookies.txt")
         btn_cookie = QPushButton("Browse...")
+        btn_cookie.setIcon(get_icon("folder", "#cbd5e1"))
         btn_cookie.setObjectName("btnSecondary")
         btn_cookie.clicked.connect(self.browse_cookie_file)
         cookie_box = QHBoxLayout()
@@ -195,7 +200,7 @@ class SettingsTab(QWidget):
         layout.addWidget(grp_net)
 
         # 5. UI Theme & Extra Args
-        grp_adv = QGroupBox("🎨 Appearance & Custom Options")
+        grp_adv = QGroupBox("Appearance & Custom Options")
         grid_adv = QGridLayout(grp_adv)
         grid_adv.setSpacing(10)
 
@@ -217,12 +222,14 @@ class SettingsTab(QWidget):
 
         # Bottom Buttons
         btn_row = QHBoxLayout()
-        self.btn_save = QPushButton("💾 Save All Settings")
+        self.btn_save = QPushButton("Save All Settings")
+        self.btn_save.setIcon(get_icon("check", "#ffffff"))
         self.btn_save.setObjectName("btnPrimary")
         self.btn_save.setFixedHeight(40)
         self.btn_save.clicked.connect(self.save_all)
 
-        self.btn_reset = QPushButton("🔄 Reset Defaults")
+        self.btn_reset = QPushButton("Reset Defaults")
+        self.btn_reset.setIcon(get_icon("refresh", "#cbd5e1"))
         self.btn_reset.setObjectName("btnSecondary")
         self.btn_reset.setFixedHeight(40)
         self.btn_reset.clicked.connect(self.reset_defaults)
@@ -240,12 +247,12 @@ class SettingsTab(QWidget):
         path = find_ffmpeg_binary(custom)
         if path:
             ok, ver = get_ffmpeg_version(path)
-            self.lbl_ffmpeg_status.setText(f"✅ Detected ({path})")
+            self.lbl_ffmpeg_status.setText(f"Detected ({path})")
             self.lbl_ffmpeg_status.setStyleSheet("color: #34d399; font-weight: 600;")
             if hasattr(self, "lbl_ff_info"):
                 self.lbl_ff_info.setText(f"FFmpeg Processor:  <b>Ready</b> ({os.path.basename(path)})")
         else:
-            self.lbl_ffmpeg_status.setText("❌ Not Found")
+            self.lbl_ffmpeg_status.setText("Not Found")
             self.lbl_ffmpeg_status.setStyleSheet("color: #f87171; font-weight: 600;")
             if hasattr(self, "lbl_ff_info"):
                 self.lbl_ff_info.setText("FFmpeg Processor:  <b>Not Found</b>")

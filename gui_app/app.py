@@ -8,12 +8,13 @@ from PySide6.QtWidgets import (
     QMenu, QProgressBar, QMessageBox
 )
 from PySide6.QtCore import Qt, QSize
-from PySide6.QtGui import QIcon, QFont, QAction
+from PySide6.QtGui import QIcon, QFont, QAction, QPixmap
 
 from gui_app.settings_manager import SettingsManager
 from gui_app.styles import get_app_stylesheet
 from gui_app.ffmpeg_finder import find_ffmpeg_binary, get_ffmpeg_version
 from gui_app.updater import UpdateDialog, CheckUpdatesWorker
+from gui_app.assets_manager import get_app_icon, get_icon, get_logo_pixmap
 from gui_app.widgets.downloader_tab import DownloaderTab
 from gui_app.widgets.queue_tab import QueueTab
 from gui_app.widgets.settings_tab import SettingsTab
@@ -25,6 +26,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.settings_mgr = SettingsManager()
         self.setWindowTitle("YT-DLP & FFmpeg GUI Studio")
+        self.setWindowIcon(get_app_icon())
         self.setMinimumSize(980, 680)
         self.resize(1100, 740)
 
@@ -39,54 +41,54 @@ class MainWindow(QMainWindow):
 
         # File Menu
         file_menu = menubar.addMenu("File")
-        act_open_folder = QAction("Open Download Folder", self)
+        act_open_folder = QAction(get_icon("folder", "#94a3b8"), "Open Download Folder", self)
         act_open_folder.triggered.connect(self.open_download_folder)
         file_menu.addAction(act_open_folder)
 
-        act_clear_hist = QAction("Clear History", self)
+        act_clear_hist = QAction(get_icon("trash", "#94a3b8"), "Clear History", self)
         act_clear_hist.triggered.connect(self.clear_history)
         file_menu.addAction(act_clear_hist)
 
         file_menu.addSeparator()
-        act_exit = QAction("Exit", self)
+        act_exit = QAction(get_icon("cancel", "#94a3b8"), "Exit", self)
         act_exit.triggered.connect(self.close)
         file_menu.addAction(act_exit)
 
         # Tools Menu
         tools_menu = menubar.addMenu("Tools")
-        act_update_engines = QAction("⚡ Update yt-dlp & FFmpeg Engines...", self)
+        act_update_engines = QAction(get_icon("refresh", "#38bdf8"), "Update yt-dlp & FFmpeg Engines...", self)
         act_update_engines.triggered.connect(self.open_updater_dialog)
         tools_menu.addAction(act_update_engines)
 
-        act_batch = QAction("Open Batch Queue", self)
+        act_batch = QAction(get_icon("queue", "#94a3b8"), "Open Batch Queue", self)
         act_batch.triggered.connect(lambda: self.tabs.setCurrentIndex(1))
         tools_menu.addAction(act_batch)
 
-        act_settings = QAction("Application Preferences", self)
+        act_settings = QAction(get_icon("settings", "#94a3b8"), "Application Preferences", self)
         act_settings.triggered.connect(lambda: self.tabs.setCurrentIndex(3))
         tools_menu.addAction(act_settings)
 
         # View Menu
         view_menu = menubar.addMenu("View")
-        act_v_down = QAction("Downloader", self)
+        act_v_down = QAction(get_icon("download", "#94a3b8"), "Downloader", self)
         act_v_down.triggered.connect(lambda: self.tabs.setCurrentIndex(0))
         view_menu.addAction(act_v_down)
 
-        act_v_queue = QAction("Batch Queue", self)
+        act_v_queue = QAction(get_icon("queue", "#94a3b8"), "Batch Queue", self)
         act_v_queue.triggered.connect(lambda: self.tabs.setCurrentIndex(1))
         view_menu.addAction(act_v_queue)
 
-        act_v_hist = QAction("History", self)
+        act_v_hist = QAction(get_icon("history", "#94a3b8"), "History", self)
         act_v_hist.triggered.connect(lambda: self.tabs.setCurrentIndex(2))
         view_menu.addAction(act_v_hist)
 
-        act_v_logs = QAction("Logs & Diagnostics", self)
+        act_v_logs = QAction(get_icon("logs", "#94a3b8"), "Logs & Diagnostics", self)
         act_v_logs.triggered.connect(lambda: self.tabs.setCurrentIndex(4))
         view_menu.addAction(act_v_logs)
 
         # Help Menu
         help_menu = menubar.addMenu("Help")
-        act_check_up = QAction("🔄 Check for Engine Updates...", self)
+        act_check_up = QAction(get_icon("refresh", "#94a3b8"), "Check for Engine Updates...", self)
         act_check_up.triggered.connect(self.open_updater_dialog)
         help_menu.addAction(act_check_up)
 
@@ -101,7 +103,7 @@ class MainWindow(QMainWindow):
         corner_layout.setContentsMargins(0, 0, 10, 0)
         corner_layout.setSpacing(10)
 
-        ytdlp_ver = getattr(yt_dlp, "__version__", "2024.4")
+        ytdlp_ver = getattr(yt_dlp, "__version__", None) or getattr(getattr(yt_dlp, "version", None), "__version__", "2026.08.19")
         self.badge_ytdlp = QLabel(f"yt-dlp v{ytdlp_ver}")
         self.badge_ytdlp.setObjectName("badgeVersion")
         self.badge_ytdlp.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -130,6 +132,7 @@ class MainWindow(QMainWindow):
         # Main Tab Widget
         self.tabs = QTabWidget()
         self.tabs.setDocumentMode(True)
+        self.tabs.setIconSize(QSize(18, 18))
 
         # Instantiate Tabs
         self.tab_downloader = DownloaderTab(self.settings_mgr)
@@ -138,12 +141,12 @@ class MainWindow(QMainWindow):
         self.tab_settings = SettingsTab(self.settings_mgr)
         self.tab_logs = LogsTab()
 
-        # Add Tabs with Icons
-        self.tabs.addTab(self.tab_downloader, "🚀 Downloader")
-        self.tabs.addTab(self.tab_queue, "📋 Batch Queue")
-        self.tabs.addTab(self.tab_history, "📁 History")
-        self.tabs.addTab(self.tab_settings, "⚙️ Settings")
-        self.tabs.addTab(self.tab_logs, "📜 Logs / Diagnostics")
+        # Add Tabs with Crisp Vector Assets
+        self.tabs.addTab(self.tab_downloader, get_icon("download", "#38bdf8"), "Downloader")
+        self.tabs.addTab(self.tab_queue, get_icon("queue", "#a78bfa"), "Batch Queue")
+        self.tabs.addTab(self.tab_history, get_icon("history", "#34d399"), "History")
+        self.tabs.addTab(self.tab_settings, get_icon("settings", "#94a3b8"), "Settings")
+        self.tabs.addTab(self.tab_logs, get_icon("logs", "#fbbf24"), "Logs / Diagnostics")
 
         # Inter-tab Connections
         self.tab_downloader.add_to_queue_signal.connect(self.on_item_queued)
@@ -224,7 +227,7 @@ class MainWindow(QMainWindow):
 
     def on_startup_check_finished(self, info: dict):
         if info.get("ytdlp_update_needed"):
-            self.tab_logs.append_log("INFO", f"⚡ Newer yt-dlp available: v{info.get('ytdlp_latest')}")
+            self.tab_logs.append_log("INFO", f"Newer yt-dlp available: v{info.get('ytdlp_latest')}")
             self.badge_ytdlp.setText(f"yt-dlp v{info.get('ytdlp_current')} (Update Available)")
             self.badge_ytdlp.setStyleSheet("background-color: #1e3a5f; color: #38bdf8; font-weight: 700; border: 1px solid #0284c7; padding: 3px 8px; border-radius: 3px;")
 
@@ -245,13 +248,16 @@ class MainWindow(QMainWindow):
         self.tab_history.load_history_data()
 
     def show_about_dialog(self):
-        QMessageBox.information(
-            self, "About YT-DLP & FFmpeg GUI Studio",
-            "⚡ YT-DLP & FFmpeg GUI Studio\n\n"
-            "A fast, modern universal desktop media downloader and processor.\n"
-            "Built with Python 3, PySide6, yt-dlp, and FFmpeg.\n\n"
-            "GitHub: https://github.com/hazynyx/yt-mpeg-gui"
+        msg = QMessageBox(self)
+        msg.setWindowTitle("About YT-DLP & FFmpeg GUI Studio")
+        msg.setIconPixmap(get_logo_pixmap(64, 64))
+        msg.setText("<h3>YT-DLP & FFmpeg GUI Studio</h3>")
+        msg.setInformativeText(
+            "A fast, modern universal desktop media downloader and processor.<br>"
+            "Built with Python 3, PySide6, yt-dlp, and FFmpeg.<br><br>"
+            "<b>GitHub:</b> <a href='https://github.com/hazynyx/yt-mpeg-gui'>https://github.com/hazynyx/yt-mpeg-gui</a>"
         )
+        msg.exec()
 
     def on_download_completed(self, result: dict):
         self.tab_history.load_history_data()
@@ -262,7 +268,8 @@ class MainWindow(QMainWindow):
 
     def log_startup_info(self):
         self.tab_logs.append_log("INFO", "Starting YT-DLP & FFmpeg GUI Studio...")
-        self.tab_logs.append_log("INFO", f"yt-dlp version: {getattr(yt_dlp, '__version__', 'unknown')}")
+        ytdlp_ver = getattr(yt_dlp, "__version__", None) or getattr(getattr(yt_dlp, "version", None), "__version__", "unknown")
+        self.tab_logs.append_log("INFO", f"yt-dlp version: {ytdlp_ver}")
         ffmpeg_p = find_ffmpeg_binary(self.settings_mgr.get("custom_ffmpeg_path"))
         if ffmpeg_p:
             ok, ver = get_ffmpeg_version(ffmpeg_p)
@@ -274,6 +281,7 @@ class MainWindow(QMainWindow):
 def main():
     QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
     app = QApplication(sys.argv)
+    app.setWindowIcon(get_app_icon())
     app.setStyle("Fusion")
     
     window = MainWindow()

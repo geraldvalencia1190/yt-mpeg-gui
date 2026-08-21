@@ -8,14 +8,15 @@ from PySide6.QtWidgets import (
     QGridLayout, QGroupBox, QRadioButton, QButtonGroup, QSizePolicy,
     QScrollArea
 )
-from PySide6.QtCore import Qt, Signal, QThread
-from PySide6.QtGui import QPixmap, QImage, QGuiApplication, QFont
+from PySide6.QtCore import Qt, Signal, QThread, QSize
+from PySide6.QtGui import QPixmap, QImage, QGuiApplication, QFont, QIcon
 import requests
 from io import BytesIO
 from PIL import Image
 
 from gui_app.engine import InfoWorker, DownloadWorker
 from gui_app.settings_manager import SettingsManager
+from gui_app.assets_manager import get_icon
 
 class ThumbnailLoader(QThread):
     loaded = Signal(QPixmap)
@@ -86,16 +87,18 @@ class DownloaderTab(QWidget):
         url_layout.setSpacing(8)
 
         self.url_input = QLineEdit()
-        self.url_input.setPlaceholderText("https://www.youtube.com/watch?v=... or any supported video/audio link")
+        self.url_input.setPlaceholderText("https://www.youtube.com/watch?v=... or any supported media link")
         self.url_input.setFixedHeight(30)
         self.url_input.returnPressed.connect(self.start_analyze)
 
-        self.btn_paste = QPushButton("📋 Paste")
+        self.btn_paste = QPushButton("Paste")
+        self.btn_paste.setIcon(get_icon("plus", "#e2e8f0"))
         self.btn_paste.setFixedHeight(30)
-        self.btn_paste.setMinimumWidth(80)
+        self.btn_paste.setMinimumWidth(85)
         self.btn_paste.clicked.connect(self.paste_from_clipboard)
 
-        self.btn_analyze = QPushButton("🔍 Analyze Link")
+        self.btn_analyze = QPushButton("Analyze Link")
+        self.btn_analyze.setIcon(get_icon("search", "#e2e8f0"))
         self.btn_analyze.setFixedHeight(30)
         self.btn_analyze.setMinimumWidth(125)
         self.btn_analyze.clicked.connect(self.start_analyze)
@@ -142,86 +145,50 @@ class DownloaderTab(QWidget):
         self.val_uploader = QLabel("--")
         self.val_uploader.setObjectName("infoVal")
 
-        lbl_type_k = QLabel("Type")
-        lbl_type_k.setObjectName("infoKey")
-        self.val_type = QLabel("Single Video")
-        self.val_type.setObjectName("infoVal")
-
-        lbl_entries_k = QLabel("Entries")
-        lbl_entries_k.setObjectName("infoKey")
-        self.val_entries = QLabel("1 video")
-        self.val_entries.setObjectName("infoVal")
-
         lbl_dur_k = QLabel("Duration")
         lbl_dur_k.setObjectName("infoKey")
-        self.val_dur = QLabel("--:--")
+        self.val_dur = QLabel("--")
         self.val_dur.setObjectName("infoVal")
 
-        lbl_qual_k = QLabel("Max Quality")
-        lbl_qual_k.setObjectName("infoKey")
-        self.val_qual = QLabel("Auto")
-        self.val_qual.setObjectName("infoVal")
-
         grid_info.addWidget(lbl_title_k, 0, 0)
-        grid_info.addWidget(self.val_title, 0, 1)
-        grid_info.addWidget(lbl_uploader_k, 1, 0)
-        grid_info.addWidget(self.val_uploader, 1, 1)
-        grid_info.addWidget(lbl_type_k, 2, 0)
-        grid_info.addWidget(self.val_type, 2, 1)
-        grid_info.addWidget(lbl_entries_k, 3, 0)
-        grid_info.addWidget(self.val_entries, 3, 1)
+        grid_info.addWidget(self.val_title, 1, 0)
+        grid_info.addWidget(lbl_uploader_k, 2, 0)
+        grid_info.addWidget(self.val_uploader, 3, 0)
         grid_info.addWidget(lbl_dur_k, 4, 0)
-        grid_info.addWidget(self.val_dur, 4, 1)
-        grid_info.addWidget(lbl_qual_k, 5, 0)
-        grid_info.addWidget(self.val_qual, 5, 1)
+        grid_info.addWidget(self.val_dur, 5, 0)
 
         # Col 2 & 3 (Right info)
         lbl_avail_k = QLabel("Availability")
         lbl_avail_k.setObjectName("infoKey")
-        self.val_avail = QLabel("✔ Available")
-        self.val_avail.setObjectName("infoAvailable")
+        self.val_avail = QLabel("Idle / Ready")
+        self.val_avail.setObjectName("infoVal")
+        self.val_avail.setStyleSheet("color: #38bdf8; font-weight: 600;")
 
-        lbl_fmt_k = QLabel("Formats")
-        lbl_fmt_k.setObjectName("infoKey")
-        self.val_fmts = QLabel("Audio + Video")
-        self.val_fmts.setObjectName("infoVal")
+        lbl_views_k = QLabel("Views / Stats")
+        lbl_views_k.setObjectName("infoKey")
+        self.val_views = QLabel("--")
+        self.val_views.setObjectName("infoVal")
 
-        lbl_ext_k = QLabel("Extractors")
-        lbl_ext_k.setObjectName("infoKey")
-        self.val_extractors = QLabel("generic")
-        self.val_extractors.setObjectName("infoVal")
+        lbl_formats_k = QLabel("Max Quality Detected")
+        lbl_formats_k.setObjectName("infoKey")
+        self.val_formats = QLabel("--")
+        self.val_formats.setObjectName("infoVal")
 
-        lbl_date_k = QLabel("Upload Date")
-        lbl_date_k.setObjectName("infoKey")
-        self.val_date = QLabel("--")
-        self.val_date.setObjectName("infoVal")
+        grid_info.addWidget(lbl_avail_k, 0, 1)
+        grid_info.addWidget(self.val_avail, 1, 1)
+        grid_info.addWidget(lbl_views_k, 2, 1)
+        grid_info.addWidget(self.val_views, 3, 1)
+        grid_info.addWidget(lbl_formats_k, 4, 1)
+        grid_info.addWidget(self.val_formats, 5, 1)
 
-        lbl_desc_k = QLabel("Description")
-        lbl_desc_k.setObjectName("infoKey")
-        self.val_desc = QLabel("--")
-        self.val_desc.setObjectName("infoVal")
-
-        grid_info.addWidget(lbl_avail_k, 0, 2)
-        grid_info.addWidget(self.val_avail, 0, 3)
-        grid_info.addWidget(lbl_fmt_k, 1, 2)
-        grid_info.addWidget(self.val_fmts, 1, 3)
-        grid_info.addWidget(lbl_ext_k, 2, 2)
-        grid_info.addWidget(self.val_extractors, 2, 3)
-        grid_info.addWidget(lbl_date_k, 3, 2)
-        grid_info.addWidget(self.val_date, 3, 3)
-        grid_info.addWidget(lbl_desc_k, 4, 2)
-        grid_info.addWidget(self.val_desc, 4, 3)
-
-        grid_info.setColumnStretch(0, 0)
-        grid_info.setColumnStretch(1, 3)
-        grid_info.setColumnStretch(2, 0)
-        grid_info.setColumnStretch(3, 2)
+        grid_info.setColumnStretch(0, 3)
+        grid_info.setColumnStretch(1, 2)
 
         info_main_layout.addLayout(grid_info, 1)
         layout.addWidget(grp_info)
 
         # ----------------------------------------------------
-        # 3. Download Options (Separate Video vs Audio Options)
+        # 3. Download Options (Separate Video vs Audio Modes)
         # ----------------------------------------------------
         grp_opts = QGroupBox("3. Download Options")
         grp_opts.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
@@ -229,22 +196,28 @@ class DownloaderTab(QWidget):
         opts_layout.setContentsMargins(12, 14, 12, 12)
         opts_layout.setSpacing(10)
 
-        # Row 1: Mode Selection Radio Group
+        # Row 1: Mode Switcher (Video vs Audio)
         mode_select_layout = QHBoxLayout()
-        mode_select_layout.setSpacing(16)
-        
-        lbl_target = QLabel("Download Type:")
-        lbl_target.setStyleSheet("font-weight: 700; color: #38bdf8;")
-        
-        self.radio_mode_group = QButtonGroup(self)
-        self.radio_video = QRadioButton("🎥 Video Download (with Audio)")
-        self.radio_audio = QRadioButton("🎵 Audio Extraction (MP3 / FLAC / WAV / M4A)")
-        self.radio_video.setChecked(True)
-        self.radio_mode_group.addButton(self.radio_video)
-        self.radio_mode_group.addButton(self.radio_audio)
-        self.radio_video.toggled.connect(self.on_mode_toggled)
+        mode_select_layout.setContentsMargins(0, 0, 0, 0)
+        mode_select_layout.setSpacing(20)
 
-        mode_select_layout.addWidget(lbl_target)
+        lbl_mode = QLabel("Download Type:")
+        lbl_mode.setStyleSheet("font-weight: 700; color: #cbd5e1;")
+        
+        self.radio_video = QRadioButton("Video Download")
+        self.radio_video.setIcon(get_icon("video", "#38bdf8"))
+        self.radio_video.setChecked(True)
+        self.radio_video.toggled.connect(self.on_mode_changed)
+
+        self.radio_audio = QRadioButton("Audio Extraction")
+        self.radio_audio.setIcon(get_icon("audio", "#34d399"))
+        self.radio_audio.toggled.connect(self.on_mode_changed)
+
+        self.mode_group = QButtonGroup(self)
+        self.mode_group.addButton(self.radio_video)
+        self.mode_group.addButton(self.radio_audio)
+
+        mode_select_layout.addWidget(lbl_mode)
         mode_select_layout.addWidget(self.radio_video)
         mode_select_layout.addWidget(self.radio_audio)
         mode_select_layout.addStretch()
@@ -318,8 +291,9 @@ class DownloaderTab(QWidget):
         self.folder_input = QLineEdit(self.settings_mgr.get("download_dir"))
         self.folder_input.setFixedHeight(28)
         
-        self.btn_browse = QPushButton("...")
-        self.btn_browse.setFixedSize(30, 28)
+        self.btn_browse = QPushButton()
+        self.btn_browse.setIcon(get_icon("folder", "#cbd5e1"))
+        self.btn_browse.setFixedSize(32, 28)
         self.btn_browse.clicked.connect(self.browse_folder)
 
         folder_box = QHBoxLayout()
@@ -359,7 +333,8 @@ class DownloaderTab(QWidget):
         self.chk_queue_error = QCheckBox("Add to Queue if errors")
         self.chk_queue_error.setChecked(False)
 
-        self.btn_adv_opts = QPushButton("⚙️ Advanced Options...")
+        self.btn_adv_opts = QPushButton("Advanced Options...")
+        self.btn_adv_opts.setIcon(get_icon("settings", "#94a3b8"))
         self.btn_adv_opts.setFixedHeight(28)
         self.btn_adv_opts.clicked.connect(self.open_settings_signal.emit)
 
@@ -380,23 +355,31 @@ class DownloaderTab(QWidget):
         act_layout = QHBoxLayout()
         act_layout.setSpacing(10)
 
-        self.btn_download = QPushButton("⬇  Start Download Now")
+        self.btn_download = QPushButton("Start Download Now")
+        self.btn_download.setIcon(get_icon("download", "#ffffff"))
+        self.btn_download.setIconSize(QSize(18, 18))
         self.btn_download.setObjectName("btnStartDownload")
         self.btn_download.setFixedHeight(38)
         self.btn_download.clicked.connect(self.start_download)
 
-        self.btn_pause = QPushButton("⏸  Pause")
+        self.btn_pause = QPushButton("Pause")
+        self.btn_pause.setIcon(get_icon("pause", "#ffffff"))
+        self.btn_pause.setIconSize(QSize(16, 16))
         self.btn_pause.setObjectName("btnPauseAction")
         self.btn_pause.setFixedHeight(38)
         self.btn_pause.setEnabled(False)
         self.btn_pause.clicked.connect(self.toggle_pause)
 
-        self.btn_add_queue = QPushButton(":=  Add to Queue")
+        self.btn_add_queue = QPushButton("Add to Queue")
+        self.btn_add_queue.setIcon(get_icon("queue", "#ffffff"))
+        self.btn_add_queue.setIconSize(QSize(16, 16))
         self.btn_add_queue.setObjectName("btnQueueAction")
         self.btn_add_queue.setFixedHeight(38)
         self.btn_add_queue.clicked.connect(self.add_to_queue)
 
-        self.btn_cancel = QPushButton("✕  Cancel")
+        self.btn_cancel = QPushButton("Cancel")
+        self.btn_cancel.setIcon(get_icon("cancel", "#ffffff"))
+        self.btn_cancel.setIconSize(QSize(16, 16))
         self.btn_cancel.setObjectName("btnCancelAction")
         self.btn_cancel.setFixedHeight(38)
         self.btn_cancel.setEnabled(False)
@@ -458,35 +441,35 @@ class DownloaderTab(QWidget):
         scroll_area.setWidget(scroll_content)
         outer_layout.addWidget(scroll_area)
 
-    def on_mode_toggled(self):
+    def on_mode_changed(self):
         is_video = self.radio_video.isChecked()
         self.widget_video_opts.setVisible(is_video)
         self.widget_audio_opts.setVisible(not is_video)
         self.chk_subs.setEnabled(is_video)
 
     def paste_from_clipboard(self):
-        clipboard = QGuiApplication.clipboard()
-        text = clipboard.text().strip()
+        cb = QGuiApplication.clipboard()
+        text = cb.text().strip()
         if text:
             self.url_input.setText(text)
             self.start_analyze()
 
     def browse_folder(self):
-        folder = QFileDialog.getExistingDirectory(self, "Select Download Directory", self.folder_input.text())
+        folder = QFileDialog.getExistingDirectory(self, "Select Download Folder", self.folder_input.text())
         if folder:
             self.folder_input.setText(folder)
-            self.settings_mgr.set("download_dir", folder)
 
     def start_analyze(self):
         url = self.url_input.text().strip()
         if not url:
-            QMessageBox.warning(self, "Empty URL", "Please enter a valid media link.")
+            QMessageBox.warning(self, "Empty URL", "Please enter a valid video or audio URL.")
             return
 
         self.btn_analyze.setEnabled(False)
         self.btn_analyze.setText("Analyzing...")
-        self.val_title.setText("Fetching media information...")
-        self.log_signal.emit("INFO", f"Analyzing link: {url}")
+        self.val_avail.setText("Analyzing media...")
+        self.val_avail.setStyleSheet("color: #fbbf24; font-weight: 600;")
+        self.thumb_label.setText("Fetching Thumbnail...")
 
         settings = self.settings_mgr.load_settings()
         self.info_worker = InfoWorker(url, settings)
@@ -497,53 +480,41 @@ class DownloaderTab(QWidget):
 
     def on_info_ready(self, info: Dict[str, Any]):
         self.btn_analyze.setEnabled(True)
-        self.btn_analyze.setText("🔍 Analyze Link")
+        self.btn_analyze.setText("Analyze Link")
+        self.btn_analyze.setIcon(get_icon("search", "#e2e8f0"))
         self.current_info = info
 
-        # Fill in Section 2
-        self.val_title.setText(info.get("title", "No Title"))
-        self.val_uploader.setText(info.get("uploader", "Unknown"))
+        # Fill Link Information labels
+        title = info.get("title", "--")
+        self.val_title.setText(title)
+        self.val_title.setToolTip(title)
         
-        is_pl = info.get("is_playlist", False)
-        ent_count = info.get("entry_count", 1)
-        self.val_type.setText("Playlist / Collection" if is_pl else "Single Video")
-        self.val_entries.setText(f"{ent_count} video{'s' if ent_count != 1 else ''}")
+        uploader = info.get("uploader", "--")
+        self.val_uploader.setText(uploader)
 
-        dur_sec = info.get("duration", 0)
-        dur_str = info.get("duration_string")
-        if not dur_str:
-            mins, secs = divmod(dur_sec, 60)
-            hours, mins = divmod(mins, 60)
-            dur_str = f"{hours:02d}:{mins:02d}:{secs:02d}" if hours > 0 else f"{mins:02d}:{secs:02d}"
-        self.val_dur.setText(dur_str)
+        dur = info.get("duration", 0)
+        if dur > 0:
+            m, s = divmod(dur, 60)
+            h, m = divmod(m, 60)
+            self.val_dur.setText(f"{h:02d}:{m:02d}:{s:02d}" if h > 0 else f"{m:02d}:{s:02d}")
+        else:
+            self.val_dur.setText(info.get("duration_string") or "--")
+
+        self.val_avail.setText("Available (Stream Ready)")
+        self.val_avail.setStyleSheet("color: #34d399; font-weight: 700;")
+
+        views = info.get("view_count", 0)
+        self.val_views.setText(f"{views:,} views" if views else "Online Media")
 
         formats = info.get("formats", [])
-        best_res = formats[0].get("resolution", "Auto") if formats else "Auto"
-        self.val_qual.setText(best_res)
+        if formats:
+            max_res = formats[0].get("resolution", "Best")
+            self.val_formats.setText(f"{max_res} ({len(formats)} streams)")
+        else:
+            self.val_formats.setText("Auto Extracted")
 
-        self.val_avail.setText("✔ Available")
-        self.val_avail.setStyleSheet("color: #22c55e; font-weight: 700;")
-        self.val_fmts.setText("Audio + Video")
-        
-        # Extractor name from URL
-        url = info.get("url", "")
-        extractor = "generic"
-        if "youtube.com" in url or "youtu.be" in url:
-            extractor = "youtube" if not is_pl else "youtube:playlist"
-        elif "instagram.com" in url:
-            extractor = "instagram"
-        elif "tiktok.com" in url:
-            extractor = "tiktok"
-        elif "twitter.com" in url or "x.com" in url:
-            extractor = "twitter"
-        self.val_extractors.setText(extractor)
-
-        self.lbl_item_counter.setText(f"Item: 1 / {ent_count}")
-
-        # Load Thumbnail
         thumb_url = info.get("thumbnail")
         if thumb_url:
-            self.thumb_label.setText("Loading...")
             self.thumb_loader = ThumbnailLoader(thumb_url)
             self.thumb_loader.loaded.connect(self.thumb_label.setPixmap)
             self.thumb_loader.start()
@@ -552,9 +523,10 @@ class DownloaderTab(QWidget):
 
     def on_info_error(self, err_msg: str):
         self.btn_analyze.setEnabled(True)
-        self.btn_analyze.setText("🔍 Analyze Link")
+        self.btn_analyze.setText("Analyze Link")
+        self.btn_analyze.setIcon(get_icon("search", "#e2e8f0"))
         self.val_title.setText("Failed to analyze link.")
-        self.val_avail.setText("❌ Unavailable / Error")
+        self.val_avail.setText("Unavailable / Error")
         self.val_avail.setStyleSheet("color: #ef4444; font-weight: 700;")
         QMessageBox.critical(self, "Analysis Failed", f"Could not retrieve media info:\n{err_msg}")
 
@@ -615,7 +587,8 @@ class DownloaderTab(QWidget):
         self.btn_download.setEnabled(False)
         self.btn_analyze.setEnabled(False)
         self.btn_pause.setEnabled(True)
-        self.btn_pause.setText("⏸  Pause")
+        self.btn_pause.setText("Pause")
+        self.btn_pause.setIcon(get_icon("pause", "#ffffff"))
         self.btn_pause.setObjectName("btnPauseAction")
         self.btn_pause.style().unpolish(self.btn_pause)
         self.btn_pause.style().polish(self.btn_pause)
@@ -636,12 +609,14 @@ class DownloaderTab(QWidget):
         if self.download_worker:
             is_paused = self.download_worker.toggle_pause()
             if is_paused:
-                self.btn_pause.setText("▶  Resume")
+                self.btn_pause.setText("Resume")
+                self.btn_pause.setIcon(get_icon("play", "#ffffff"))
                 self.btn_pause.setObjectName("btnResumeAction")
-                self.lbl_prog_status.setText("Status: Paused ⏸ (Click Resume to continue)")
+                self.lbl_prog_status.setText("Status: Paused (Click Resume to continue)")
                 self.lbl_speed.setText("Speed: 0.0 KB/s")
             else:
-                self.btn_pause.setText("⏸  Pause")
+                self.btn_pause.setText("Pause")
+                self.btn_pause.setIcon(get_icon("pause", "#ffffff"))
                 self.btn_pause.setObjectName("btnPauseAction")
                 self.lbl_prog_status.setText("Status: Resuming download...")
             self.btn_pause.style().unpolish(self.btn_pause)
@@ -678,7 +653,7 @@ class DownloaderTab(QWidget):
         if status == "paused":
             self.lbl_speed.setText("Speed: 0.0 KB/s")
             self.lbl_eta.setText("ETA: Paused")
-            self.lbl_prog_status.setText("Status: Paused ⏸ (Click Resume to continue)")
+            self.lbl_prog_status.setText("Status: Paused (Click Resume to continue)")
             return
 
         if speed > 1024 * 1024:
@@ -711,16 +686,17 @@ class DownloaderTab(QWidget):
             self.lbl_prog_status.setText(f"Status: Downloading... {filename}")
 
     def on_task_finished(self, result: Dict[str, Any]):
-        self.lbl_prog_status.setText("Status: Download Completed Successfully! 🎉")
+        self.lbl_prog_status.setText("Status: Download Completed Successfully!")
         self.prog_bar.setValue(100)
         self.btn_pause.setEnabled(False)
-        self.btn_pause.setText("⏸  Pause")
+        self.btn_pause.setText("Pause")
+        self.btn_pause.setIcon(get_icon("pause", "#ffffff"))
         self.btn_pause.setObjectName("btnPauseAction")
         self.settings_mgr.add_history_entry(result)
         self.download_finished_signal.emit(result)
 
     def on_task_failed(self, url: str, err: str):
-        self.lbl_prog_status.setText("Status: Download Failed ❌")
+        self.lbl_prog_status.setText("Status: Download Failed")
         self.btn_pause.setEnabled(False)
         QMessageBox.critical(self, "Download Error", f"Failed to download:\n{url}\n\n{err}")
 
@@ -728,7 +704,8 @@ class DownloaderTab(QWidget):
         self.btn_download.setEnabled(True)
         self.btn_analyze.setEnabled(True)
         self.btn_pause.setEnabled(False)
-        self.btn_pause.setText("⏸  Pause")
+        self.btn_pause.setText("Pause")
+        self.btn_pause.setIcon(get_icon("pause", "#ffffff"))
         self.btn_pause.setObjectName("btnPauseAction")
         self.btn_pause.style().unpolish(self.btn_pause)
         self.btn_pause.style().polish(self.btn_pause)

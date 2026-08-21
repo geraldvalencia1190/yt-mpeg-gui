@@ -7,10 +7,11 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton,
     QTableWidget, QTableWidgetItem, QHeaderView, QFrame, QMessageBox
 )
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor
+from PySide6.QtCore import Qt, QSize
+from PySide6.QtGui import QColor, QIcon
 
 from gui_app.settings_manager import SettingsManager
+from gui_app.assets_manager import get_icon
 
 class HistoryTab(QWidget):
     def __init__(self, settings_mgr: SettingsManager):
@@ -37,10 +38,11 @@ class HistoryTab(QWidget):
         self.lbl_history_count.setObjectName("sectionHeader")
 
         self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText("🔍 Search downloads by title, channel or URL...")
+        self.search_input.setPlaceholderText("Search downloads by title, channel or URL...")
         self.search_input.textChanged.connect(self.filter_history)
 
-        self.btn_clear_history = QPushButton("🗑️ Clear History")
+        self.btn_clear_history = QPushButton("Clear History")
+        self.btn_clear_history.setIcon(get_icon("trash", "#cbd5e1"))
         self.btn_clear_history.setObjectName("btnDanger")
         self.btn_clear_history.clicked.connect(self.clear_all_history)
 
@@ -110,21 +112,24 @@ class HistoryTab(QWidget):
             actions_layout.setContentsMargins(4, 2, 4, 2)
             actions_layout.setSpacing(6)
 
-            btn_play = QPushButton("▶️")
+            btn_play = QPushButton("Play")
+            btn_play.setIcon(get_icon("play", "#38bdf8"))
             btn_play.setToolTip("Play / Open File")
-            btn_play.setFixedWidth(36)
+            btn_play.setFixedWidth(54)
             btn_play.setObjectName("btnSecondary")
             btn_play.clicked.connect(lambda ch, p=path: self.play_file(p))
 
-            btn_folder = QPushButton("📂")
+            btn_folder = QPushButton("Folder")
+            btn_folder.setIcon(get_icon("folder", "#cbd5e1"))
             btn_folder.setToolTip("Show in Folder")
-            btn_folder.setFixedWidth(36)
+            btn_folder.setFixedWidth(64)
             btn_folder.setObjectName("btnSecondary")
             btn_folder.clicked.connect(lambda ch, p=path: self.show_in_folder(p))
 
-            btn_del = QPushButton("✕")
+            btn_del = QPushButton()
+            btn_del.setIcon(get_icon("cancel", "#f87171"))
             btn_del.setToolTip("Remove from History")
-            btn_del.setFixedWidth(36)
+            btn_del.setFixedWidth(30)
             btn_del.setObjectName("btnDanger")
             entry_id = item.get("id", "")
             btn_del.clicked.connect(lambda ch, eid=entry_id: self.delete_entry(eid))
