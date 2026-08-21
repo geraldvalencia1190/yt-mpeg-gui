@@ -1,4 +1,5 @@
 import os
+import sys
 from typing import Dict, Any
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton,
@@ -6,9 +7,11 @@ from PySide6.QtWidgets import (
     QScrollArea, QGroupBox, QGridLayout
 )
 from PySide6.QtCore import Qt, Signal
+import yt_dlp
 
 from gui_app.settings_manager import SettingsManager
 from gui_app.ffmpeg_finder import find_ffmpeg_binary, find_ffprobe_binary, get_ffmpeg_version
+from gui_app.updater import UpdateDialog
 
 class SettingsTab(QWidget):
     settings_saved_signal = Signal()
@@ -31,7 +34,34 @@ class SettingsTab(QWidget):
         container = QWidget()
         layout = QVBoxLayout(container)
         layout.setContentsMargins(12, 12, 12, 12)
-        layout.setSpacing(16)
+        layout.setSpacing(14)
+
+        # 0. Engine & Backend Updater Card
+        grp_updates = QGroupBox("⚡ Engine & Backend Updater (yt-dlp & FFmpeg)")
+        grid_up = QGridLayout(grp_updates)
+        grid_up.setSpacing(10)
+
+        ytdlp_ver = getattr(yt_dlp, "__version__", "unknown")
+        lbl_yt = QLabel(f"Core yt-dlp Engine:  <b>v{ytdlp_ver}</b>")
+        lbl_yt.setStyleSheet("color: #38bdf8;")
+
+        self.lbl_ff_info = QLabel("FFmpeg Processor: Checking...")
+        self.lbl_ff_info.setStyleSheet("color: #22c55e;")
+
+        self.btn_open_updater = QPushButton("🔄 Check & Update Engines from GitHub...")
+        self.btn_open_updater.setObjectName("btnStartDownload")
+        self.btn_open_updater.setFixedHeight(34)
+        self.btn_open_updater.clicked.connect(self.open_update_dialog)
+
+        self.chk_auto_update = QCheckBox("Check for engine updates on application launch")
+        self.chk_auto_update.setChecked(self.settings_mgr.get("check_updates_startup", True))
+
+        grid_up.addWidget(lbl_yt, 0, 0)
+        grid_up.addWidget(self.lbl_ff_info, 0, 1)
+        grid_up.addWidget(self.btn_open_updater, 1, 0)
+        grid_up.addWidget(self.chk_auto_update, 1, 1)
+
+        layout.addWidget(grp_updates)
 
         # 1. Output & File Naming
         grp_output = QGroupBox("📁 Download & File Naming Settings")
@@ -71,7 +101,7 @@ class SettingsTab(QWidget):
 
         grid_ff.addWidget(QLabel("Custom FFmpeg Path:"), 1, 0)
         self.edit_ffmpeg_path = QLineEdit(self.settings_mgr.get("custom_ffmpeg_path"))
-        self.edit_ffmpeg_path.setPlaceholderText("Leave blank to use bundled ffmpeg.exe")
+        self.edit_ffmpeg_path.setPlaceholderText("Leave blank to use integrated ffmpeg.exe")
         btn_ff_browse = QPushButton("Browse...")
         btn_ff_browse.setObjectName("btnSecondary")
         btn_ff_browse.clicked.connect(self.browse_ffmpeg_binary)
@@ -212,9 +242,22 @@ class SettingsTab(QWidget):
             ok, ver = get_ffmpeg_version(path)
             self.lbl_ffmpeg_status.setText(f"✅ Detected ({path})")
             self.lbl_ffmpeg_status.setStyleSheet("color: #34d399; font-weight: 600;")
+            if hasattr(self, "lbl_ff_info"):
+                self.lbl_ff_info.setText(f"FFmpeg Processor:  <b>Ready</b> ({os.path.basename(path)})")
         else:
             self.lbl_ffmpeg_status.setText("❌ Not Found")
             self.lbl_ffmpeg_status.setStyleSheet("color: #f87171; font-weight: 600;")
+            if hasattr(self, "lbl_ff_info"):
+                self.lbl_ff_info.setText("FFmpeg Processor:  <b>Not Found</b>")
+
+    def open_update_dialog(self):
+        dialog = UpdateDialog(self.settings_mgr, self)
+        dialog.engines_updated.connect(self.on_engines_updated)
+        dialog.exec()
+
+    def on_engines_updated(self):
+        self.check_ffmpeg_status()
+        self.settings_saved_signal.emit()
 
     def browse_download_dir(self):
         folder = QFileDialog.getExistingDirectory(self, "Select Download Folder", self.edit_dir.text())
@@ -253,6 +296,7 @@ class SettingsTab(QWidget):
             "proxy": self.edit_proxy.text().strip(),
             "theme": theme,
             "custom_args": self.edit_extra_args.text().strip(),
+            "check_updates_startup": self.chk_auto_update.isChecked(),
         }
         self.settings_mgr.save_settings(settings)
         self.check_ffmpeg_status()
@@ -286,5 +330,6 @@ class SettingsTab(QWidget):
             self.spin_fragments.setValue(4)
             self.edit_proxy.setText("")
             self.edit_extra_args.setText("")
+            self.chk_auto_update.setChecked(True)
             self.check_ffmpeg_status()
             QMessageBox.information(self, "Reset Complete", "Settings have been reset to defaults.")

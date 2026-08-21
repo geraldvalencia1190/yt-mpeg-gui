@@ -13,6 +13,7 @@ from PySide6.QtGui import QIcon, QFont, QAction
 from gui_app.settings_manager import SettingsManager
 from gui_app.styles import get_app_stylesheet
 from gui_app.ffmpeg_finder import find_ffmpeg_binary, get_ffmpeg_version
+from gui_app.updater import UpdateDialog, CheckUpdatesWorker
 from gui_app.widgets.downloader_tab import DownloaderTab
 from gui_app.widgets.queue_tab import QueueTab
 from gui_app.widgets.settings_tab import SettingsTab
@@ -25,12 +26,13 @@ class MainWindow(QMainWindow):
         self.settings_mgr = SettingsManager()
         self.setWindowTitle("YT-DLP & FFmpeg GUI Studio")
         self.setMinimumSize(980, 680)
-        self.resize(1080, 720)
+        self.resize(1100, 740)
 
         self.init_menu_bar()
         self.init_ui()
         self.apply_theme()
         self.log_startup_info()
+        self.check_startup_updates()
 
     def init_menu_bar(self):
         menubar = self.menuBar()
@@ -52,6 +54,10 @@ class MainWindow(QMainWindow):
 
         # Tools Menu
         tools_menu = menubar.addMenu("Tools")
+        act_update_engines = QAction("⚡ Update yt-dlp & FFmpeg Engines...", self)
+        act_update_engines.triggered.connect(self.open_updater_dialog)
+        tools_menu.addAction(act_update_engines)
+
         act_batch = QAction("Open Batch Queue", self)
         act_batch.triggered.connect(lambda: self.tabs.setCurrentIndex(1))
         tools_menu.addAction(act_batch)
@@ -80,6 +86,11 @@ class MainWindow(QMainWindow):
 
         # Help Menu
         help_menu = menubar.addMenu("Help")
+        act_check_up = QAction("🔄 Check for Engine Updates...", self)
+        act_check_up.triggered.connect(self.open_updater_dialog)
+        help_menu.addAction(act_check_up)
+
+        help_menu.addSeparator()
         act_about = QAction("About YT-DLP & FFmpeg GUI Studio", self)
         act_about.triggered.connect(self.show_about_dialog)
         help_menu.addAction(act_about)
@@ -93,9 +104,13 @@ class MainWindow(QMainWindow):
         ytdlp_ver = getattr(yt_dlp, "__version__", "2024.4")
         self.badge_ytdlp = QLabel(f"yt-dlp v{ytdlp_ver}")
         self.badge_ytdlp.setObjectName("badgeVersion")
+        self.badge_ytdlp.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.badge_ytdlp.mousePressEvent = lambda e: self.open_updater_dialog()
 
         self.badge_ffmpeg = QLabel("FFmpeg: Checking...")
         self.badge_ffmpeg.setObjectName("badgeFfmpegReady")
+        self.badge_ffmpeg.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.badge_ffmpeg.mousePressEvent = lambda e: self.open_updater_dialog()
 
         corner_layout.addWidget(self.badge_ytdlp)
         corner_layout.addWidget(self.badge_ffmpeg)
@@ -190,6 +205,28 @@ class MainWindow(QMainWindow):
             self.badge_ffmpeg.setObjectName("badgeFfmpegMissing")
         self.badge_ffmpeg.style().unpolish(self.badge_ffmpeg)
         self.badge_ffmpeg.style().polish(self.badge_ffmpeg)
+
+    def open_updater_dialog(self):
+        dialog = UpdateDialog(self.settings_mgr, self)
+        dialog.engines_updated.connect(self.on_engines_updated)
+        dialog.exec()
+
+    def on_engines_updated(self):
+        self.update_ffmpeg_badge()
+        self.tab_settings.check_ffmpeg_status()
+        self.tab_logs.append_log("SUCCESS", "Engines updated successfully from GitHub.")
+
+    def check_startup_updates(self):
+        if self.settings_mgr.get("check_updates_startup", True):
+            self.startup_check_worker = CheckUpdatesWorker()
+            self.startup_check_worker.check_finished.connect(self.on_startup_check_finished)
+            self.startup_check_worker.start()
+
+    def on_startup_check_finished(self, info: dict):
+        if info.get("ytdlp_update_needed"):
+            self.tab_logs.append_log("INFO", f"⚡ Newer yt-dlp available: v{info.get('ytdlp_latest')}")
+            self.badge_ytdlp.setText(f"yt-dlp v{info.get('ytdlp_current')} (Update Available)")
+            self.badge_ytdlp.setStyleSheet("background-color: #1e3a5f; color: #38bdf8; font-weight: 700; border: 1px solid #0284c7; padding: 3px 8px; border-radius: 3px;")
 
     def apply_theme(self, theme_name: str = None):
         stylesheet = get_app_stylesheet("cyan")
