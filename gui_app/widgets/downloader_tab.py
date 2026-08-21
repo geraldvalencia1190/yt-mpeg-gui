@@ -5,7 +5,8 @@ from typing import Dict, Any, Optional
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton,
     QFrame, QComboBox, QCheckBox, QProgressBar, QFileDialog, QMessageBox,
-    QGridLayout, QGroupBox, QRadioButton, QButtonGroup, QSizePolicy, QFormLayout
+    QGridLayout, QGroupBox, QRadioButton, QButtonGroup, QSizePolicy,
+    QScrollArea
 )
 from PySide6.QtCore import Qt, Signal, QThread
 from PySide6.QtGui import QPixmap, QImage, QGuiApplication, QFont
@@ -58,28 +59,45 @@ class DownloaderTab(QWidget):
         self.init_ui()
 
     def init_ui(self):
-        layout = QVBoxLayout(self)
+        outer_layout = QVBoxLayout(self)
+        outer_layout.setContentsMargins(0, 0, 0, 0)
+        outer_layout.setSpacing(0)
+
+        # Smooth Scroll Area to prevent any vertical collapsing
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setFrameShape(QFrame.Shape.NoFrame)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+
+        scroll_content = QWidget()
+        scroll_content.setObjectName("scrollContent")
+        layout = QVBoxLayout(scroll_content)
         layout.setContentsMargins(12, 10, 12, 10)
-        layout.setSpacing(8)
+        layout.setSpacing(10)
 
         # ----------------------------------------------------
         # 1. Enter Media URL
         # ----------------------------------------------------
         grp_url = QGroupBox("1. Enter Media URL")
+        grp_url.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         url_layout = QHBoxLayout(grp_url)
-        url_layout.setContentsMargins(10, 12, 10, 10)
+        url_layout.setContentsMargins(12, 14, 12, 12)
         url_layout.setSpacing(8)
 
         self.url_input = QLineEdit()
-        self.url_input.setPlaceholderText("https://www.youtube.com/watch?v=... or any supported URL")
+        self.url_input.setPlaceholderText("https://www.youtube.com/watch?v=... or any supported video/audio link")
+        self.url_input.setFixedHeight(30)
         self.url_input.returnPressed.connect(self.start_analyze)
 
         self.btn_paste = QPushButton("📋 Paste")
-        self.btn_paste.setMinimumWidth(75)
+        self.btn_paste.setFixedHeight(30)
+        self.btn_paste.setMinimumWidth(80)
         self.btn_paste.clicked.connect(self.paste_from_clipboard)
 
         self.btn_analyze = QPushButton("🔍 Analyze Link")
-        self.btn_analyze.setMinimumWidth(120)
+        self.btn_analyze.setFixedHeight(30)
+        self.btn_analyze.setMinimumWidth(125)
         self.btn_analyze.clicked.connect(self.start_analyze)
 
         url_layout.addWidget(self.url_input, 1)
@@ -88,125 +106,130 @@ class DownloaderTab(QWidget):
         layout.addWidget(grp_url)
 
         # ----------------------------------------------------
-        # 2. Link Information (Responsive 2-Box Container)
+        # 2. Link Information (Explicit Row Heights & Clean Spacing)
         # ----------------------------------------------------
         grp_info = QGroupBox("2. Link Information")
+        grp_info.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         info_main_layout = QHBoxLayout(grp_info)
-        info_main_layout.setContentsMargins(10, 12, 10, 10)
-        info_main_layout.setSpacing(14)
+        info_main_layout.setContentsMargins(12, 14, 12, 12)
+        info_main_layout.setSpacing(16)
 
         # Thumbnail Box
         self.thumb_label = QLabel()
         self.thumb_label.setFixedSize(180, 115)
-        self.thumb_label.setStyleSheet("background-color: #121212; border: 1px solid #2e2e2e; border-radius: 3px; color: #666666;")
+        self.thumb_label.setStyleSheet("background-color: #101010; border: 1px solid #282828; border-radius: 4px; color: #555555;")
         self.thumb_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.thumb_label.setText("No Thumbnail")
         info_main_layout.addWidget(self.thumb_label)
 
-        # Container for Left Info & Right Info (Prevents any overlap on maximize)
-        cols_container = QWidget()
-        cols_layout = QHBoxLayout(cols_container)
-        cols_layout.setContentsMargins(0, 0, 0, 0)
-        cols_layout.setSpacing(20)
+        # 2-Column Grid with fixed row heights
+        grid_info = QGridLayout()
+        grid_info.setHorizontalSpacing(14)
+        grid_info.setVerticalSpacing(4)
 
-        # Col 1: Left Details (Form Layout)
-        form_left = QFormLayout()
-        form_left.setContentsMargins(0, 0, 0, 0)
-        form_left.setHorizontalSpacing(12)
-        form_left.setVerticalSpacing(4)
-        form_left.setLabelAlignment(Qt.AlignmentFlag.AlignLeft)
+        for r in range(6):
+            grid_info.setRowMinimumHeight(r, 20)
 
-        self.lbl_title_k = QLabel("Title")
-        self.lbl_title_k.setObjectName("infoKey")
+        # Col 0 & 1 (Left info)
+        lbl_title_k = QLabel("Title")
+        lbl_title_k.setObjectName("infoKey")
         self.val_title = QLabel("--")
         self.val_title.setObjectName("infoVal")
         self.val_title.setWordWrap(True)
 
-        self.lbl_uploader_k = QLabel("Uploader / Channel")
-        self.lbl_uploader_k.setObjectName("infoKey")
+        lbl_uploader_k = QLabel("Uploader / Channel")
+        lbl_uploader_k.setObjectName("infoKey")
         self.val_uploader = QLabel("--")
         self.val_uploader.setObjectName("infoVal")
 
-        self.lbl_type_k = QLabel("Type")
-        self.lbl_type_k.setObjectName("infoKey")
+        lbl_type_k = QLabel("Type")
+        lbl_type_k.setObjectName("infoKey")
         self.val_type = QLabel("Single Video")
         self.val_type.setObjectName("infoVal")
 
-        self.lbl_entries_k = QLabel("Entries")
-        self.lbl_entries_k.setObjectName("infoKey")
+        lbl_entries_k = QLabel("Entries")
+        lbl_entries_k.setObjectName("infoKey")
         self.val_entries = QLabel("1 video")
         self.val_entries.setObjectName("infoVal")
 
-        self.lbl_dur_k = QLabel("Duration")
-        self.lbl_dur_k.setObjectName("infoKey")
+        lbl_dur_k = QLabel("Duration")
+        lbl_dur_k.setObjectName("infoKey")
         self.val_dur = QLabel("--:--")
         self.val_dur.setObjectName("infoVal")
 
-        self.lbl_qual_k = QLabel("Max Quality")
-        self.lbl_qual_k.setObjectName("infoKey")
+        lbl_qual_k = QLabel("Max Quality")
+        lbl_qual_k.setObjectName("infoKey")
         self.val_qual = QLabel("Auto")
         self.val_qual.setObjectName("infoVal")
 
-        form_left.addRow(self.lbl_title_k, self.val_title)
-        form_left.addRow(self.lbl_uploader_k, self.val_uploader)
-        form_left.addRow(self.lbl_type_k, self.val_type)
-        form_left.addRow(self.lbl_entries_k, self.val_entries)
-        form_left.addRow(self.lbl_dur_k, self.val_dur)
-        form_left.addRow(self.lbl_qual_k, self.val_qual)
+        grid_info.addWidget(lbl_title_k, 0, 0)
+        grid_info.addWidget(self.val_title, 0, 1)
+        grid_info.addWidget(lbl_uploader_k, 1, 0)
+        grid_info.addWidget(self.val_uploader, 1, 1)
+        grid_info.addWidget(lbl_type_k, 2, 0)
+        grid_info.addWidget(self.val_type, 2, 1)
+        grid_info.addWidget(lbl_entries_k, 3, 0)
+        grid_info.addWidget(self.val_entries, 3, 1)
+        grid_info.addWidget(lbl_dur_k, 4, 0)
+        grid_info.addWidget(self.val_dur, 4, 1)
+        grid_info.addWidget(lbl_qual_k, 5, 0)
+        grid_info.addWidget(self.val_qual, 5, 1)
 
-        # Col 2: Right Details (Form Layout)
-        form_right = QFormLayout()
-        form_right.setContentsMargins(0, 0, 0, 0)
-        form_right.setHorizontalSpacing(12)
-        form_right.setVerticalSpacing(4)
-        form_right.setLabelAlignment(Qt.AlignmentFlag.AlignLeft)
-
-        self.lbl_avail_k = QLabel("Availability")
-        self.lbl_avail_k.setObjectName("infoKey")
+        # Col 2 & 3 (Right info)
+        lbl_avail_k = QLabel("Availability")
+        lbl_avail_k.setObjectName("infoKey")
         self.val_avail = QLabel("✔ Available")
         self.val_avail.setObjectName("infoAvailable")
 
-        self.lbl_fmt_k = QLabel("Formats")
-        self.lbl_fmt_k.setObjectName("infoKey")
+        lbl_fmt_k = QLabel("Formats")
+        lbl_fmt_k.setObjectName("infoKey")
         self.val_fmts = QLabel("Audio + Video")
         self.val_fmts.setObjectName("infoVal")
 
-        self.lbl_ext_k = QLabel("Extractors")
-        self.lbl_ext_k.setObjectName("infoKey")
+        lbl_ext_k = QLabel("Extractors")
+        lbl_ext_k.setObjectName("infoKey")
         self.val_extractors = QLabel("generic")
         self.val_extractors.setObjectName("infoVal")
 
-        self.lbl_date_k = QLabel("Upload Date")
-        self.lbl_date_k.setObjectName("infoKey")
+        lbl_date_k = QLabel("Upload Date")
+        lbl_date_k.setObjectName("infoKey")
         self.val_date = QLabel("--")
         self.val_date.setObjectName("infoVal")
 
-        self.lbl_desc_k = QLabel("Description")
-        self.lbl_desc_k.setObjectName("infoKey")
+        lbl_desc_k = QLabel("Description")
+        lbl_desc_k.setObjectName("infoKey")
         self.val_desc = QLabel("--")
         self.val_desc.setObjectName("infoVal")
 
-        form_right.addRow(self.lbl_avail_k, self.val_avail)
-        form_right.addRow(self.lbl_fmt_k, self.val_fmts)
-        form_right.addRow(self.lbl_ext_k, self.val_extractors)
-        form_right.addRow(self.lbl_date_k, self.val_date)
-        form_right.addRow(self.lbl_desc_k, self.val_desc)
+        grid_info.addWidget(lbl_avail_k, 0, 2)
+        grid_info.addWidget(self.val_avail, 0, 3)
+        grid_info.addWidget(lbl_fmt_k, 1, 2)
+        grid_info.addWidget(self.val_fmts, 1, 3)
+        grid_info.addWidget(lbl_ext_k, 2, 2)
+        grid_info.addWidget(self.val_extractors, 2, 3)
+        grid_info.addWidget(lbl_date_k, 3, 2)
+        grid_info.addWidget(self.val_date, 3, 3)
+        grid_info.addWidget(lbl_desc_k, 4, 2)
+        grid_info.addWidget(self.val_desc, 4, 3)
 
-        cols_layout.addLayout(form_left, 3)
-        cols_layout.addLayout(form_right, 2)
+        grid_info.setColumnStretch(0, 0)
+        grid_info.setColumnStretch(1, 3)
+        grid_info.setColumnStretch(2, 0)
+        grid_info.setColumnStretch(3, 2)
 
-        info_main_layout.addWidget(cols_container, 1)
+        info_main_layout.addLayout(grid_info, 1)
         layout.addWidget(grp_info)
 
         # ----------------------------------------------------
         # 3. Download Options (Separate Video vs Audio Options)
         # ----------------------------------------------------
         grp_opts = QGroupBox("3. Download Options")
+        grp_opts.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         opts_layout = QVBoxLayout(grp_opts)
-        opts_layout.setContentsMargins(10, 12, 10, 10)
-        opts_layout.setSpacing(8)
+        opts_layout.setContentsMargins(12, 14, 12, 12)
+        opts_layout.setSpacing(10)
 
-        # Mode Selection Row (Segmented Radio Buttons)
+        # Row 1: Mode Selection Radio Group
         mode_select_layout = QHBoxLayout()
         mode_select_layout.setSpacing(16)
         
@@ -227,14 +250,16 @@ class DownloaderTab(QWidget):
         mode_select_layout.addStretch()
         opts_layout.addLayout(mode_select_layout)
 
-        # Parameter Grid (Video & Audio controls)
-        grid_params = QGridLayout()
-        grid_params.setHorizontalSpacing(14)
-        grid_params.setVerticalSpacing(8)
+        # Row 2: VIDEO Options Widget (Visible in Video Mode)
+        self.widget_video_opts = QWidget()
+        v_opts_layout = QHBoxLayout(self.widget_video_opts)
+        v_opts_layout.setContentsMargins(0, 0, 0, 0)
+        v_opts_layout.setSpacing(12)
 
-        # --- VIDEO CONTROLS ---
-        self.lbl_v_res = QLabel("Video Resolution:")
+        lbl_v_res = QLabel("Video Resolution:")
+        lbl_v_res.setFixedWidth(110)
         self.combo_v_res = QComboBox()
+        self.combo_v_res.setFixedHeight(28)
         self.combo_v_res.addItems([
             "Best Quality (Auto-merged)",
             "4K Ultra HD (2160p)",
@@ -245,62 +270,78 @@ class DownloaderTab(QWidget):
             "360p Low",
         ])
 
-        self.lbl_v_fmt = QLabel("Video Container:")
+        lbl_v_fmt = QLabel("Video Container:")
+        lbl_v_fmt.setFixedWidth(110)
         self.combo_v_fmt = QComboBox()
+        self.combo_v_fmt.setFixedHeight(28)
         self.combo_v_fmt.addItems(["MP4 (Universal)", "MKV (Matroska)", "WEBM", "AVI", "MOV (QuickTime)"])
 
-        # --- AUDIO CONTROLS (Initially hidden) ---
-        self.lbl_a_fmt = QLabel("Audio Format / Codec:")
+        v_opts_layout.addWidget(lbl_v_res)
+        v_opts_layout.addWidget(self.combo_v_res, 1)
+        v_opts_layout.addWidget(lbl_v_fmt)
+        v_opts_layout.addWidget(self.combo_v_fmt, 1)
+        opts_layout.addWidget(self.widget_video_opts)
+
+        # Row 2: AUDIO Options Widget (Visible in Audio Mode)
+        self.widget_audio_opts = QWidget()
+        a_opts_layout = QHBoxLayout(self.widget_audio_opts)
+        a_opts_layout.setContentsMargins(0, 0, 0, 0)
+        a_opts_layout.setSpacing(12)
+
+        lbl_a_fmt = QLabel("Audio Format / Codec:")
+        lbl_a_fmt.setFixedWidth(130)
         self.combo_a_fmt = QComboBox()
+        self.combo_a_fmt.setFixedHeight(28)
         self.combo_a_fmt.addItems(["MP3", "M4A (AAC)", "FLAC (Lossless)", "WAV (Lossless)", "OPUS", "AAC"])
 
-        self.lbl_a_bitrate = QLabel("Audio Quality / Bitrate:")
+        lbl_a_bitrate = QLabel("Audio Quality / Bitrate:")
+        lbl_a_bitrate.setFixedWidth(130)
         self.combo_a_bitrate = QComboBox()
+        self.combo_a_bitrate.setFixedHeight(28)
         self.combo_a_bitrate.addItems(["320 kbps (High Quality)", "256 kbps", "192 kbps (Standard)", "128 kbps (Compact)"])
 
-        # Add to Grid (Row 0)
-        grid_params.addWidget(self.lbl_v_res, 0, 0)
-        grid_params.addWidget(self.combo_v_res, 0, 1)
-        grid_params.addWidget(self.lbl_v_fmt, 0, 2)
-        grid_params.addWidget(self.combo_v_fmt, 0, 3)
+        a_opts_layout.addWidget(lbl_a_fmt)
+        a_opts_layout.addWidget(self.combo_a_fmt, 1)
+        a_opts_layout.addWidget(lbl_a_bitrate)
+        a_opts_layout.addWidget(self.combo_a_bitrate, 1)
+        self.widget_audio_opts.hide()
+        opts_layout.addWidget(self.widget_audio_opts)
 
-        grid_params.addWidget(self.lbl_a_fmt, 0, 0)
-        grid_params.addWidget(self.combo_a_fmt, 0, 1)
-        grid_params.addWidget(self.lbl_a_bitrate, 0, 2)
-        grid_params.addWidget(self.combo_a_bitrate, 0, 3)
+        # Row 3: Output Folder & File Name Template
+        widget_folder_row = QWidget()
+        folder_row_layout = QHBoxLayout(widget_folder_row)
+        folder_row_layout.setContentsMargins(0, 0, 0, 0)
+        folder_row_layout.setSpacing(12)
 
-        # Hide audio controls initially
-        self.lbl_a_fmt.hide()
-        self.combo_a_fmt.hide()
-        self.lbl_a_bitrate.hide()
-        self.combo_a_bitrate.hide()
-
-        # --- ROW 1: Output Folder & File Template ---
         lbl_folder = QLabel("Output Folder:")
+        lbl_folder.setFixedWidth(110)
         self.folder_input = QLineEdit(self.settings_mgr.get("download_dir"))
+        self.folder_input.setFixedHeight(28)
+        
         self.btn_browse = QPushButton("...")
-        self.btn_browse.setFixedWidth(30)
+        self.btn_browse.setFixedSize(30, 28)
         self.btn_browse.clicked.connect(self.browse_folder)
 
         folder_box = QHBoxLayout()
+        folder_box.setContentsMargins(0, 0, 0, 0)
         folder_box.setSpacing(4)
         folder_box.addWidget(self.folder_input, 1)
         folder_box.addWidget(self.btn_browse)
 
         lbl_tmpl = QLabel("File Name Template:")
+        lbl_tmpl.setFixedWidth(120)
         self.template_input = QLineEdit(self.settings_mgr.get("filename_template", "%(title)s.%(ext)s"))
+        self.template_input.setFixedHeight(28)
 
-        grid_params.addWidget(lbl_folder, 1, 0)
-        grid_params.addLayout(folder_box, 1, 1)
-        grid_params.addWidget(lbl_tmpl, 1, 2)
-        grid_params.addWidget(self.template_input, 1, 3)
+        folder_row_layout.addWidget(lbl_folder)
+        folder_row_layout.addLayout(folder_box, 1)
+        folder_row_layout.addWidget(lbl_tmpl)
+        folder_row_layout.addWidget(self.template_input, 1)
+        opts_layout.addWidget(widget_folder_row)
 
-        grid_params.setColumnStretch(1, 1)
-        grid_params.setColumnStretch(3, 1)
-        opts_layout.addLayout(grid_params)
-
-        # Checkboxes row & Advanced button
+        # Row 4: Checkboxes & Advanced Options
         chk_row = QHBoxLayout()
+        chk_row.setContentsMargins(0, 0, 0, 0)
         chk_row.setSpacing(14)
 
         self.chk_thumb = QCheckBox("Embed Thumbnail")
@@ -319,6 +360,7 @@ class DownloaderTab(QWidget):
         self.chk_queue_error.setChecked(False)
 
         self.btn_adv_opts = QPushButton("⚙️ Advanced Options...")
+        self.btn_adv_opts.setFixedHeight(28)
         self.btn_adv_opts.clicked.connect(self.open_settings_signal.emit)
 
         chk_row.addWidget(self.chk_thumb)
@@ -333,7 +375,7 @@ class DownloaderTab(QWidget):
         layout.addWidget(grp_opts)
 
         # ----------------------------------------------------
-        # Action Buttons
+        # Action Buttons Bar
         # ----------------------------------------------------
         act_layout = QHBoxLayout()
         act_layout.setSpacing(10)
@@ -363,8 +405,9 @@ class DownloaderTab(QWidget):
         # 4. Progress
         # ----------------------------------------------------
         grp_prog = QGroupBox("4. Progress")
+        grp_prog.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         prog_layout = QVBoxLayout(grp_prog)
-        prog_layout.setContentsMargins(10, 12, 10, 10)
+        prog_layout.setContentsMargins(12, 14, 12, 12)
         prog_layout.setSpacing(6)
 
         # Top line: Status (left) & Item (right)
@@ -405,22 +448,13 @@ class DownloaderTab(QWidget):
         layout.addWidget(grp_prog)
         layout.addStretch(1)
 
+        scroll_area.setWidget(scroll_content)
+        outer_layout.addWidget(scroll_area)
+
     def on_mode_toggled(self):
         is_video = self.radio_video.isChecked()
-
-        # Show / Hide Video controls
-        self.lbl_v_res.setVisible(is_video)
-        self.combo_v_res.setVisible(is_video)
-        self.lbl_v_fmt.setVisible(is_video)
-        self.combo_v_fmt.setVisible(is_video)
-
-        # Show / Hide Audio controls
-        self.lbl_a_fmt.setVisible(not is_video)
-        self.combo_a_fmt.setVisible(not is_video)
-        self.lbl_a_bitrate.setVisible(not is_video)
-        self.combo_a_bitrate.setVisible(not is_video)
-
-        # Update chapters and subtitles visibility
+        self.widget_video_opts.setVisible(is_video)
+        self.widget_audio_opts.setVisible(not is_video)
         self.chk_subs.setEnabled(is_video)
 
     def paste_from_clipboard(self):
