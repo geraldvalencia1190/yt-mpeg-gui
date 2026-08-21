@@ -81,26 +81,35 @@ class QueueTab(QWidget):
         self.queue_count_label.setObjectName("sectionHeader")
 
         self.btn_start_queue = QPushButton("⚡ Start Batch Download")
-        self.btn_start_queue.setObjectName("btnSuccess")
+        self.btn_start_queue.setObjectName("btnStartDownload")
+        self.btn_start_queue.setFixedHeight(34)
         self.btn_start_queue.clicked.connect(self.start_queue_download)
 
-        self.btn_stop_queue = QPushButton("⏹️ Stop / Cancel")
-        self.btn_stop_queue.setObjectName("btnDanger")
+        self.btn_pause_queue = QPushButton("⏸  Pause Queue")
+        self.btn_pause_queue.setObjectName("btnPauseAction")
+        self.btn_pause_queue.setFixedHeight(34)
+        self.btn_pause_queue.setEnabled(False)
+        self.btn_pause_queue.clicked.connect(self.toggle_queue_pause)
+
+        self.btn_stop_queue = QPushButton("✕ Stop / Cancel")
+        self.btn_stop_queue.setObjectName("btnCancelAction")
+        self.btn_stop_queue.setFixedHeight(34)
         self.btn_stop_queue.setEnabled(False)
         self.btn_stop_queue.clicked.connect(self.stop_queue_download)
 
         self.btn_clear_completed = QPushButton("🧹 Clear Done")
-        self.btn_clear_completed.setObjectName("btnSecondary")
+        self.btn_clear_completed.setFixedHeight(34)
         self.btn_clear_completed.clicked.connect(self.clear_completed)
 
         self.btn_clear_all = QPushButton("🗑️ Clear All")
-        self.btn_clear_all.setObjectName("btnSecondary")
+        self.btn_clear_all.setFixedHeight(34)
         self.btn_clear_all.clicked.connect(self.clear_all)
 
         ctrl_row.addWidget(self.queue_count_label)
         ctrl_row.addStretch()
         ctrl_row.addWidget(self.btn_clear_completed)
         ctrl_row.addWidget(self.btn_clear_all)
+        ctrl_row.addWidget(self.btn_pause_queue)
         ctrl_row.addWidget(self.btn_stop_queue)
         ctrl_row.addWidget(self.btn_start_queue)
         table_layout.addLayout(ctrl_row)
@@ -207,6 +216,8 @@ class QueueTab(QWidget):
                 item_status.setForeground(QColor("#34d399"))
             elif status == "Downloading":
                 item_status.setForeground(QColor("#38bdf8"))
+            elif status == "Paused":
+                item_status.setForeground(QColor("#f59e0b"))
             elif status == "Failed":
                 item_status.setForeground(QColor("#f87171"))
             self.table.setItem(row, 3, item_status)
@@ -220,14 +231,24 @@ class QueueTab(QWidget):
             self.table.setCellWidget(row, 4, p_bar)
 
     def start_queue_download(self):
-        # Filter pending or failed tasks
-        pending_tasks = [task for task in self.queue_items if task.get("status") in ("Pending", "Failed")]
+        pending_tasks = [task for task in self.queue_items if task.get("status") in ("Pending", "Failed", "Paused")]
         if not pending_tasks:
             QMessageBox.information(self, "No Tasks", "There are no pending items in the queue.")
             return
 
         self.btn_start_queue.setEnabled(False)
+        self.btn_pause_queue.setEnabled(True)
+        self.btn_pause_queue.setText("⏸  Pause Queue")
+        self.btn_pause_queue.setObjectName("btnPauseAction")
+        self.btn_pause_queue.style().unpolish(self.btn_pause_queue)
+        self.btn_pause_queue.style().polish(self.btn_pause_queue)
         self.btn_stop_queue.setEnabled(True)
+
+        for task in pending_tasks:
+            if task.get("status") != "Completed":
+                task["status"] = "Downloading"
+                break
+        self.refresh_table()
 
         settings = self.settings_mgr.load_settings()
         self.download_worker = DownloadWorker(pending_tasks, settings)
@@ -238,17 +259,41 @@ class QueueTab(QWidget):
         self.download_worker.all_finished.connect(self.on_queue_all_finished)
         self.download_worker.start()
 
+    def toggle_queue_pause(self):
+        if self.download_worker:
+            is_paused = self.download_worker.toggle_pause()
+            if is_paused:
+                self.btn_pause_queue.setText("▶  Resume Queue")
+                self.btn_pause_queue.setObjectName("btnResumeAction")
+                for task in self.queue_items:
+                    if task.get("status") == "Downloading":
+                        task["status"] = "Paused"
+                        break
+            else:
+                self.btn_pause_queue.setText("⏸  Pause Queue")
+                self.btn_pause_queue.setObjectName("btnPauseAction")
+                for task in self.queue_items:
+                    if task.get("status") == "Paused":
+                        task["status"] = "Downloading"
+                        break
+            self.btn_pause_queue.style().unpolish(self.btn_pause_queue)
+            self.btn_pause_queue.style().polish(self.btn_pause_queue)
+            self.refresh_table()
+
     def stop_queue_download(self):
         if self.download_worker:
             self.download_worker.cancel()
+            self.btn_pause_queue.setEnabled(False)
             self.btn_stop_queue.setEnabled(False)
 
     def on_queue_progress(self, data: Dict[str, Any]):
         percent = data.get("percent", 0.0)
-        # Update currently active item in table
+        status = data.get("status")
         for row, task in enumerate(self.queue_items):
-            if task.get("status") == "Downloading":
+            if task.get("status") in ("Downloading", "Paused"):
                 task["progress"] = percent
+                if status == "paused":
+                    task["status"] = "Paused"
                 widget = self.table.cellWidget(row, 4)
                 if isinstance(widget, QProgressBar):
                     widget.setValue(int(percent))
@@ -264,6 +309,13 @@ class QueueTab(QWidget):
                 self.settings_mgr.add_history_entry(result)
                 self.download_finished_signal.emit(result)
                 break
+        
+        # Mark next pending task as Downloading
+        for task in self.queue_items:
+            if task.get("status") == "Pending":
+                task["status"] = "Downloading"
+                break
+
         self.refresh_table()
 
     def on_queue_task_failed(self, url: str, err: str):
@@ -271,10 +323,21 @@ class QueueTab(QWidget):
             if task.get("url") == url:
                 task["status"] = "Failed"
                 break
+        
+        for task in self.queue_items:
+            if task.get("status") == "Pending":
+                task["status"] = "Downloading"
+                break
+
         self.refresh_table()
 
     def on_queue_all_finished(self):
         self.btn_start_queue.setEnabled(True)
+        self.btn_pause_queue.setEnabled(False)
+        self.btn_pause_queue.setText("⏸  Pause Queue")
+        self.btn_pause_queue.setObjectName("btnPauseAction")
+        self.btn_pause_queue.style().unpolish(self.btn_pause_queue)
+        self.btn_pause_queue.style().polish(self.btn_pause_queue)
         self.btn_stop_queue.setEnabled(False)
         self.refresh_table()
 

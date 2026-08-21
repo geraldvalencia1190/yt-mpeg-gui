@@ -375,7 +375,7 @@ class DownloaderTab(QWidget):
         layout.addWidget(grp_opts)
 
         # ----------------------------------------------------
-        # Action Buttons Bar
+        # Action Buttons Bar (Download, Pause/Resume, Add to Queue, Cancel)
         # ----------------------------------------------------
         act_layout = QHBoxLayout()
         act_layout.setSpacing(10)
@@ -384,6 +384,12 @@ class DownloaderTab(QWidget):
         self.btn_download.setObjectName("btnStartDownload")
         self.btn_download.setFixedHeight(38)
         self.btn_download.clicked.connect(self.start_download)
+
+        self.btn_pause = QPushButton("⏸  Pause")
+        self.btn_pause.setObjectName("btnPauseAction")
+        self.btn_pause.setFixedHeight(38)
+        self.btn_pause.setEnabled(False)
+        self.btn_pause.clicked.connect(self.toggle_pause)
 
         self.btn_add_queue = QPushButton(":=  Add to Queue")
         self.btn_add_queue.setObjectName("btnQueueAction")
@@ -396,9 +402,10 @@ class DownloaderTab(QWidget):
         self.btn_cancel.setEnabled(False)
         self.btn_cancel.clicked.connect(self.cancel_download)
 
-        act_layout.addWidget(self.btn_download, 2)
-        act_layout.addWidget(self.btn_add_queue, 1)
-        act_layout.addWidget(self.btn_cancel, 1)
+        act_layout.addWidget(self.btn_download, 3)
+        act_layout.addWidget(self.btn_pause, 2)
+        act_layout.addWidget(self.btn_add_queue, 2)
+        act_layout.addWidget(self.btn_cancel, 2)
         layout.addLayout(act_layout)
 
         # ----------------------------------------------------
@@ -607,7 +614,13 @@ class DownloaderTab(QWidget):
 
         self.btn_download.setEnabled(False)
         self.btn_analyze.setEnabled(False)
+        self.btn_pause.setEnabled(True)
+        self.btn_pause.setText("⏸  Pause")
+        self.btn_pause.setObjectName("btnPauseAction")
+        self.btn_pause.style().unpolish(self.btn_pause)
+        self.btn_pause.style().polish(self.btn_pause)
         self.btn_cancel.setEnabled(True)
+
         self.lbl_prog_status.setText(f"Status: Downloading...  {task.get('title', url)}")
         self.prog_bar.setValue(0)
 
@@ -618,6 +631,21 @@ class DownloaderTab(QWidget):
         self.download_worker.task_failed.connect(self.on_task_failed)
         self.download_worker.all_finished.connect(self.on_all_finished)
         self.download_worker.start()
+
+    def toggle_pause(self):
+        if self.download_worker:
+            is_paused = self.download_worker.toggle_pause()
+            if is_paused:
+                self.btn_pause.setText("▶  Resume")
+                self.btn_pause.setObjectName("btnResumeAction")
+                self.lbl_prog_status.setText("Status: Paused ⏸ (Click Resume to continue)")
+                self.lbl_speed.setText("Speed: 0.0 KB/s")
+            else:
+                self.btn_pause.setText("⏸  Pause")
+                self.btn_pause.setObjectName("btnPauseAction")
+                self.lbl_prog_status.setText("Status: Resuming download...")
+            self.btn_pause.style().unpolish(self.btn_pause)
+            self.btn_pause.style().polish(self.btn_pause)
 
     def add_to_queue(self):
         url = self.url_input.text().strip()
@@ -631,6 +659,7 @@ class DownloaderTab(QWidget):
     def cancel_download(self):
         if self.download_worker:
             self.download_worker.cancel()
+            self.btn_pause.setEnabled(False)
             self.btn_cancel.setEnabled(False)
             self.lbl_prog_status.setText("Status: Cancelling...")
 
@@ -646,6 +675,12 @@ class DownloaderTab(QWidget):
         self.prog_bar.setValue(int(percent))
 
         # Speed
+        if status == "paused":
+            self.lbl_speed.setText("Speed: 0.0 KB/s")
+            self.lbl_eta.setText("ETA: Paused")
+            self.lbl_prog_status.setText("Status: Paused ⏸ (Click Resume to continue)")
+            return
+
         if speed > 1024 * 1024:
             self.lbl_speed.setText(f"Speed: {speed / (1024*1024):.1f} MB/s")
         elif speed > 1024:
@@ -678,14 +713,23 @@ class DownloaderTab(QWidget):
     def on_task_finished(self, result: Dict[str, Any]):
         self.lbl_prog_status.setText("Status: Download Completed Successfully! 🎉")
         self.prog_bar.setValue(100)
+        self.btn_pause.setEnabled(False)
+        self.btn_pause.setText("⏸  Pause")
+        self.btn_pause.setObjectName("btnPauseAction")
         self.settings_mgr.add_history_entry(result)
         self.download_finished_signal.emit(result)
 
     def on_task_failed(self, url: str, err: str):
         self.lbl_prog_status.setText("Status: Download Failed ❌")
+        self.btn_pause.setEnabled(False)
         QMessageBox.critical(self, "Download Error", f"Failed to download:\n{url}\n\n{err}")
 
     def on_all_finished(self):
         self.btn_download.setEnabled(True)
         self.btn_analyze.setEnabled(True)
+        self.btn_pause.setEnabled(False)
+        self.btn_pause.setText("⏸  Pause")
+        self.btn_pause.setObjectName("btnPauseAction")
+        self.btn_pause.style().unpolish(self.btn_pause)
+        self.btn_pause.style().polish(self.btn_pause)
         self.btn_cancel.setEnabled(False)

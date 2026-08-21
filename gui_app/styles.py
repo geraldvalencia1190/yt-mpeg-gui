@@ -283,6 +283,46 @@ def get_app_stylesheet(accent: str = "cyan") -> str:
         color: #44664c;
     }
 
+    /* Pause Button (Amber/Orange) */
+    QPushButton#btnPauseAction {
+        background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #854d0e, stop:1 #5f3408);
+        border: 1px solid #a16207;
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 13px;
+        border-radius: 3px;
+        padding: 8px 16px;
+        min-height: 24px;
+    }
+
+    QPushButton#btnPauseAction:hover {
+        background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #a16207, stop:1 #713f12);
+        border-color: #ca8a04;
+    }
+
+    QPushButton#btnPauseAction:disabled {
+        background: #241a10;
+        border-color: #2d2014;
+        color: #55402d;
+    }
+
+    /* Resume Button (Sky/Cyan) */
+    QPushButton#btnResumeAction {
+        background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #0284c7, stop:1 #0369a1);
+        border: 1px solid #0ea5e9;
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 13px;
+        border-radius: 3px;
+        padding: 8px 16px;
+        min-height: 24px;
+    }
+
+    QPushButton#btnResumeAction:hover {
+        background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #0396e6, stop:1 #0284c7);
+        border-color: #38bdf8;
+    }
+
     /* Add to Queue Button */
     QPushButton#btnQueueAction {
         background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #2d333b, stop:1 #20242a);

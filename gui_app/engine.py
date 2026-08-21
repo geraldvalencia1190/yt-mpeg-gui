@@ -3,7 +3,7 @@ import sys
 import time
 import traceback
 from typing import Dict, Any, Optional, List
-from PySide6.QtCore import QThread, Signal, QObject
+from PySide6.QtCore import QThread, Signal, QObject, QMutex, QWaitCondition
 import yt_dlp
 
 from gui_app.ffmpeg_finder import find_ffmpeg_binary, find_ffprobe_binary
@@ -13,7 +13,6 @@ class CustomYTDLPLogger:
         self.callback = callback
 
     def debug(self, msg):
-        # yt-dlp sends info as debug sometimes
         if msg.startswith("[debug] "):
             self.callback("DEBUG", msg[8:])
         elif msg.startswith("[download] "):
@@ -102,7 +101,7 @@ class InfoWorker(QThread):
                                     "filesize": f.get("filesize") or f.get("filesize_approx") or 0,
                                     "vcodec": vcodec,
                                     "acodec": acodec,
-                                })
+                                    })
                     # Sort formats descending by height
                     formats_summary.sort(key=lambda x: x.get("height", 0), reverse=True)
 
@@ -133,7 +132,7 @@ class InfoWorker(QThread):
 
 
 class DownloadWorker(QThread):
-    """Worker thread that processes downloads asynchronously with progress hooks."""
+    """Worker thread that processes downloads asynchronously with progress hooks, pause/resume and cancellation."""
     progress_signal = Signal(dict)
     log_signal = Signal(str, str)
     task_finished = Signal(dict)
@@ -145,20 +144,67 @@ class DownloadWorker(QThread):
         self.tasks = tasks
         self.settings = global_settings
         self._is_cancelled = False
+        self._is_paused = False
+        self._mutex = QMutex()
+        self._pause_cond = QWaitCondition()
+        self._last_percent = 0.0
+        self._last_downloaded = 0
+        self._last_total = 0
         self._current_ydl = None
+
+    def pause(self):
+        """Pause the ongoing download stream."""
+        self._mutex.lock()
+        self._is_paused = True
+        self._mutex.unlock()
+        self.log_signal.emit("INFO", "Download paused ⏸")
+
+    def resume(self):
+        """Resume the paused download stream."""
+        self._mutex.lock()
+        self._is_paused = False
+        self._pause_cond.wakeAll()
+        self._mutex.unlock()
+        self.log_signal.emit("INFO", "Download resumed ▶")
+
+    def toggle_pause(self) -> bool:
+        """Toggle between paused and running states. Returns True if now paused, False if running."""
+        if self._is_paused:
+            self.resume()
+            return False
+        else:
+            self.pause()
+            return True
 
     def cancel(self):
         """Cancel ongoing downloads."""
         self._is_cancelled = True
+        self._mutex.lock()
+        self._is_paused = False
+        self._pause_cond.wakeAll()
+        self._mutex.unlock()
         self.log_signal.emit("WARNING", "Cancelling download operations...")
 
     def _progress_hook(self, d: Dict[str, Any]):
+        # Check and handle pause condition
+        self._mutex.lock()
+        while self._is_paused and not self._is_cancelled:
+            self.progress_signal.emit({
+                "status": "paused",
+                "filename": "Paused ⏸",
+                "downloaded_bytes": self._last_downloaded,
+                "total_bytes": self._last_total,
+                "percent": self._last_percent,
+                "speed": 0,
+                "eta": 0,
+            })
+            self._pause_cond.wait(self._mutex, 400)
+        self._mutex.unlock()
+
         if self._is_cancelled:
             raise Exception("Download cancelled by user.")
 
         status = d.get("status")
-        
-        # Calculate nice numbers
         downloaded = d.get("downloaded_bytes", 0)
         total = d.get("total_bytes") or d.get("total_bytes_estimate") or 0
         speed = d.get("speed", 0)
@@ -173,6 +219,10 @@ class DownloadWorker(QThread):
                 percent = float(p_str)
             except Exception:
                 percent = 0.0
+
+        self._last_percent = percent
+        self._last_downloaded = downloaded
+        self._last_total = total
 
         filename = os.path.basename(d.get("filename", ""))
 
@@ -206,7 +256,6 @@ class DownloadWorker(QThread):
 
     def build_ydl_opts(self, task_options: Dict[str, Any]) -> Dict[str, Any]:
         """Construct yt-dlp options dictionary combining task & global settings."""
-        # Merge settings with task override
         opts = dict(self.settings)
         opts.update(task_options)
 
@@ -225,6 +274,7 @@ class DownloadWorker(QThread):
             'postprocessor_hooks': [self._postprocessor_hook],
             'noplaylist': opts.get("noplaylist", True),
             'ignoreerrors': True,
+            'continuedl': True,  # Enables resuming downloads
         }
 
         if ffmpeg_path:
@@ -254,7 +304,6 @@ class DownloadWorker(QThread):
             if quality == "best":
                 ydl_opts['format'] = f"bestvideo+bestaudio/best"
             else:
-                # e.g., '1080p', '720p', '2160p'
                 h = quality.replace("p", "").strip()
                 ydl_opts['format'] = f"bestvideo[height<={h}]+bestaudio/best[height<={h}]/best"
 
@@ -308,7 +357,6 @@ class DownloadWorker(QThread):
         # Rate Limit
         rate_limit = opts.get("rate_limit", "").strip()
         if rate_limit:
-            # Parse e.g. 5M, 500K
             mult = 1
             if rate_limit.upper().endswith("K"):
                 mult = 1024
@@ -361,7 +409,6 @@ class DownloadWorker(QThread):
                     info = ydl.extract_info(url, download=True)
                     
                     if info:
-                        # Determine target file
                         filepath = ydl.prepare_filename(info)
                         if task.get("mode") == "audio":
                             audio_format = task.get("audio_format", "mp3")
